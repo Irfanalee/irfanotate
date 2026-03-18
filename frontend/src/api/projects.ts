@@ -2,15 +2,15 @@ import { fetchJSON } from './client';
 import type { Project, CreateProjectRequest } from '../types';
 
 export async function fetchProjects(): Promise<Project[]> {
-  return fetchJSON<Project[]>('/api/projects/');
+  return fetchJSON<Project[]>('/projects/');
 }
 
 export async function fetchProject(id: string): Promise<Project> {
-  return fetchJSON<Project>(`/api/projects/${id}`);
+  return fetchJSON<Project>(`/projects/${id}`);
 }
 
 export async function createProject(data: CreateProjectRequest): Promise<Project> {
-  return fetchJSON<Project>('/api/projects/', {
+  return fetchJSON<Project>('/projects/', {
     method: 'POST',
     body: JSON.stringify(data),
   });
@@ -20,14 +20,14 @@ export async function updateProject(
   id: string,
   data: Partial<CreateProjectRequest>
 ): Promise<Project> {
-  return fetchJSON<Project>(`/api/projects/${id}`, {
+  return fetchJSON<Project>(`/projects/${id}`, {
     method: 'PATCH',
     body: JSON.stringify(data),
   });
 }
 
 export async function deleteProject(id: string): Promise<void> {
-  await fetchJSON<unknown>(`/api/projects/${id}`, { method: 'DELETE' });
+  await fetchJSON<unknown>(`/projects/${id}`, { method: 'DELETE' });
 }
 
 export interface TemplateMeta {
@@ -44,9 +44,9 @@ export interface Template extends TemplateMeta {
 }
 
 export async function fetchTemplates(): Promise<TemplateMeta[]> {
-  return fetchJSON<TemplateMeta[]>('/api/templates/');
+  return fetchJSON<TemplateMeta[]>('/templates/');
 }
 
 export async function fetchTemplate(id: string): Promise<Template> {
-  return fetchJSON<Template>(`/api/templates/${id}`);
+  return fetchJSON<Template>(`/templates/${id}`);
 }

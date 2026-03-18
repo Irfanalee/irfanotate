@@ -79,3 +79,6 @@ logs/
 *.temp
 
 dataset/
+
+PROJECT_STRUCTURE.md
+IMPLEMENTATION_PLAN.md
