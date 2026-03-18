@@ -1,0 +1,105 @@
+import { create } from 'zustand';
+import { ImageData } from '../types';
+
+interface ImageStore {
+  images: ImageData[];
+  currentIndex: number;
+  isLoading: boolean;
+  error: string | null;
+
+  setImages: (images: ImageData[]) => void;
+  setCurrentIndex: (index: number) => void;
+  nextImage: () => void;
+  prevImage: () => void;
+  updateAnnotationCount: (filename: string, count: number) => void;
+  toggleSample: (filename: string, isSample: boolean) => void;
+  removeImage: (filename: string) => void;
+  setLoading: (loading: boolean) => void;
+  setError: (error: string | null) => void;
+  getCurrentImage: () => ImageData | null;
+  setOcrStatus: (filename: string, status: ImageData['ocrStatus']) => void;
+  setIsAnnotated: (filename: string, value: boolean) => void;
+}
+
+export const useImageStore = create<ImageStore>((set, get) => ({
+  images: [],
+  currentIndex: 0,
+  isLoading: false,
+  error: null,
+
+  setImages: (images) =>
+    set({
+      images,
+      currentIndex: 0,
+      error: null,
+    }),
+
+  setCurrentIndex: (index) => {
+    const { images } = get();
+    if (index >= 0 && index < images.length) {
+      set({ currentIndex: index });
+    }
+  },
+
+  nextImage: () => {
+    const { currentIndex, images } = get();
+    if (currentIndex < images.length - 1) {
+      set({ currentIndex: currentIndex + 1 });
+    }
+  },
+
+  prevImage: () => {
+    const { currentIndex } = get();
+    if (currentIndex > 0) {
+      set({ currentIndex: currentIndex - 1 });
+    }
+  },
+
+  updateAnnotationCount: (filename, count) => {
+    set((state) => ({
+      images: state.images.map((img) =>
+        img.filename === filename ? { ...img, annotationCount: count } : img
+      ),
+    }));
+  },
+
+  toggleSample: (filename, isSample) => {
+    set((state) => ({
+      images: state.images.map((img) =>
+        img.filename === filename ? { ...img, isSample } : img
+      ),
+    }));
+  },
+
+  removeImage: (filename) => {
+    set((state) => {
+      const newImages = state.images.filter((img) => img.filename !== filename);
+      const newIndex = Math.min(state.currentIndex, Math.max(0, newImages.length - 1));
+      return { images: newImages, currentIndex: newIndex };
+    });
+  },
+
+  setLoading: (loading) => set({ isLoading: loading }),
+  setError: (error) => set({ error }),
+
+  setOcrStatus: (filename, status) => {
+    set((state) => ({
+      images: state.images.map((img) =>
+        img.filename === filename ? { ...img, ocrStatus: status } : img
+      ),
+    }));
+  },
+
+  setIsAnnotated: (filename, value) => {
+    set((state) => ({
+      images: state.images.map((img) =>
+        img.filename === filename ? { ...img, isAnnotated: value } : img
+      ),
+    }));
+  },
+
+  getCurrentImage: () => {
+    const { images, currentIndex } = get();
+    return images[currentIndex] || null;
+  },
+}));
