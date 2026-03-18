@@ -42,6 +42,10 @@ def _count_labeled_fields(filename: str) -> int:
     try:
         with open(ann_path) as f:
             data = json.load(f)
+        # v2.0 format
+        if data.get("version") == "2.0":
+            return len(data.get("annotations", []))
+        # v1 invoice format
         count = 0
         for li in data.get("line_items", []):
             count += len(li.get("fields", {}))

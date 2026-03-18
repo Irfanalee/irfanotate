@@ -18,7 +18,7 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
   const labeledCount = labeledBoxes.filter((b) => b.fieldType !== 'unassigned').length;
 
   return (
-    <div className="h-screen flex flex-col bg-gray-50">
+    <div className="h-full flex flex-col bg-gray-50">
       <header className="h-10 bg-gray-800 text-white flex items-center px-4 justify-between">
         <h1 className="text-sm font-semibold">Invoice Annotation Tool</h1>
         <div className="flex items-center gap-4 text-xs text-gray-300">
@@ -51,7 +51,7 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
         {isDirty && <span className="text-orange-600">Unsaved changes</span>}
         <div className="flex-1" />
         <span className="text-gray-400">
-          D: Draw | S: Select | Del: Delete box | G: Group as line item | Arrows: Navigate | Ctrl+S: Save
+          D: Draw | P: Polygon | S: Select | Del: Delete | G: Group | Arrows: Navigate | Ctrl+S: Save
         </span>
       </footer>
     </div>

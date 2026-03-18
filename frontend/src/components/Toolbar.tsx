@@ -154,12 +154,21 @@ export const Toolbar: React.FC = () => {
         </button>
         <button
           onClick={() => setTool('draw')}
-          className={`px-3 py-1.5 text-sm rounded-r ${
+          className={`px-3 py-1.5 text-sm border-x border-gray-300 ${
             tool === 'draw' ? 'bg-blue-500 text-white' : 'text-gray-700 hover:bg-gray-100'
           }`}
           title="Draw box tool (D)"
         >
           Draw Box
+        </button>
+        <button
+          onClick={() => setTool('polygon')}
+          className={`px-3 py-1.5 text-sm rounded-r ${
+            tool === 'polygon' ? 'bg-blue-500 text-white' : 'text-gray-700 hover:bg-gray-100'
+          }`}
+          title="Draw polygon tool (P)"
+        >
+          Polygon
         </button>
       </div>
 

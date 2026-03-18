@@ -31,6 +31,7 @@ def init_db():
             "ALTER TABLE images ADD COLUMN is_sample BOOLEAN DEFAULT 0",
             "ALTER TABLE images ADD COLUMN ocr_status TEXT DEFAULT 'pending'",
             "ALTER TABLE images ADD COLUMN is_annotated BOOLEAN DEFAULT 0",
+            "ALTER TABLE images ADD COLUMN project_id TEXT REFERENCES projects(id)",
         ]:
             try:
                 conn.execute(text(sql))

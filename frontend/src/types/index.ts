@@ -1,4 +1,4 @@
-export type ToolMode = 'select' | 'draw';
+// ToolMode is now defined in ./annotation and re-exported at the bottom
 
 export interface CanvasTransform {
   scale: number;
@@ -122,3 +122,6 @@ export interface InvoiceAnnotation {
   line_items: LineItem[];
   header_fields: Partial<Record<HeaderFieldType, InvoiceField>>;
 }
+
+export * from './project';
+export * from './annotation';

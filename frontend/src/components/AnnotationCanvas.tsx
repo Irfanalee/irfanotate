@@ -2,8 +2,11 @@ import React, { useRef, useEffect, useCallback, useState } from 'react';
 import { useCanvasStore } from '../store/canvasStore';
 import { useInvoiceStore } from '../store/invoiceStore';
 import { useImageStore } from '../store/imageStore';
+import { useProjectStore } from '../store/projectStore';
+import { useAnnotationStore } from '../store/annotationStore';
 import { getImageUrl } from '../api/client';
 import { CanvasTransform, HandlePosition, Point, LabeledBox, FIELD_COLORS } from '../types';
+import type { SchemaLabel } from '../types';
 
 const HANDLE_SIZE = 8;
 const MIN_BOX_SIZE = 10;
@@ -13,6 +16,16 @@ function hexToRgba(hex: string, alpha: number): string {
   const g = parseInt(hex.slice(3, 5), 16);
   const b = parseInt(hex.slice(5, 7), 16);
   return `rgba(${r},${g},${b},${alpha})`;
+}
+
+function getLabelColor(
+  labelName: string,
+  projectLabels: SchemaLabel[],
+): string {
+  const found = projectLabels.find((l) => l.name === labelName);
+  if (found) return found.color;
+  // Fallback to FIELD_COLORS for invoice workflow
+  return (FIELD_COLORS as Record<string, string>)[labelName] ?? '#6B7280';
 }
 
 function screenToImage(
@@ -26,13 +39,6 @@ function screenToImage(
   return {
     x: (canvasX - transform.offsetX) / transform.scale,
     y: (canvasY - transform.offsetY) / transform.scale,
-  };
-}
-
-function imageToCanvas(imageX: number, imageY: number, transform: CanvasTransform): Point {
-  return {
-    x: imageX * transform.scale + transform.offsetX,
-    y: imageY * transform.scale + transform.offsetY,
   };
 }
 
@@ -76,13 +82,14 @@ function drawLabeledBox(
   box: LabeledBox,
   transform: CanvasTransform,
   isSelected: boolean,
-  isDrawing: boolean = false
+  isDrawing: boolean = false,
+  projectLabels: SchemaLabel[] = []
 ) {
   const x = box.bbox[0] * transform.scale + transform.offsetX;
   const y = box.bbox[1] * transform.scale + transform.offsetY;
   const w = (box.bbox[2] - box.bbox[0]) * transform.scale;
   const h = (box.bbox[3] - box.bbox[1]) * transform.scale;
-  const color = FIELD_COLORS[box.fieldType];
+  const color = getLabelColor(box.fieldType, projectLabels);
 
   ctx.fillStyle = hexToRgba(color, isSelected ? 0.3 : 0.15);
   ctx.fillRect(x, y, w, h);
@@ -136,6 +143,72 @@ function drawLabeledBox(
   }
 }
 
+function drawPolygonAnnotation(
+  ctx: CanvasRenderingContext2D,
+  points: [number, number][],
+  transform: CanvasTransform,
+  color: string,
+  isSelected: boolean,
+  closed: boolean,
+  label?: string
+) {
+  if (points.length < 1) return;
+
+  const canvasPoints = points.map(([ix, iy]) => ({
+    x: ix * transform.scale + transform.offsetX,
+    y: iy * transform.scale + transform.offsetY,
+  }));
+
+  ctx.beginPath();
+  ctx.moveTo(canvasPoints[0].x, canvasPoints[0].y);
+  for (let i = 1; i < canvasPoints.length; i++) {
+    ctx.lineTo(canvasPoints[i].x, canvasPoints[i].y);
+  }
+  if (closed) ctx.closePath();
+
+  if (closed) {
+    ctx.fillStyle = hexToRgba(color, isSelected ? 0.3 : 0.15);
+    ctx.fill();
+  }
+
+  ctx.strokeStyle = color;
+  ctx.lineWidth = isSelected ? 3 : 2;
+  ctx.setLineDash(closed ? (isSelected ? [6, 3] : []) : [5, 5]);
+  ctx.stroke();
+  ctx.setLineDash([]);
+
+  // Draw vertex dots
+  for (const pt of canvasPoints) {
+    ctx.beginPath();
+    ctx.arc(pt.x, pt.y, 4, 0, Math.PI * 2);
+    ctx.fillStyle = color;
+    ctx.fill();
+  }
+
+  // Label chip
+  if (closed && label && label !== 'unassigned') {
+    const chipLabel = label.replace(/_/g, ' ');
+    ctx.font = 'bold 10px Inter, system-ui, sans-serif';
+    const textW = ctx.measureText(chipLabel).width;
+    const chipW = textW + 8;
+    const chipH = 14;
+    const chipX = canvasPoints[0].x;
+    const chipY = Math.max(0, canvasPoints[0].y - chipH - 2);
+
+    ctx.fillStyle = color;
+    ctx.beginPath();
+    if (ctx.roundRect) {
+      ctx.roundRect(chipX, chipY, chipW, chipH, 3);
+    } else {
+      ctx.rect(chipX, chipY, chipW, chipH);
+    }
+    ctx.fill();
+
+    ctx.fillStyle = '#ffffff';
+    ctx.fillText(chipLabel, chipX + 4, chipY + 10);
+  }
+}
+
 export const AnnotationCanvas: React.FC = () => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -161,6 +234,8 @@ export const AnnotationCanvas: React.FC = () => {
     originalBbox: [number, number, number, number];
     tempId: string;
   } | null>(null);
+  // Polygon in-progress state
+  const [polygonInProgress, setPolygonInProgress] = useState<[number, number][] | null>(null);
   const lastMousePos = useRef<Point | null>(null);
 
   const { images, currentIndex } = useImageStore();
@@ -168,6 +243,18 @@ export const AnnotationCanvas: React.FC = () => {
 
   const { labeledBoxes, selectedIds, selectBox, clearSelection, addManualBox, updateBoxBbox } =
     useInvoiceStore();
+
+  const { labels: projectLabels } = useProjectStore();
+
+  const {
+    annotations,
+    selectedIds: annotSelectedIds,
+    selectAnnotation,
+    addAnnotation,
+  } = useAnnotationStore();
+
+  // Determine if we're in project mode (non-invoice) or invoice mode
+  const isProjectMode = projectLabels.length > 0;
 
   const {
     tool,
@@ -210,6 +297,7 @@ export const AnnotationCanvas: React.FC = () => {
     return () => window.removeEventListener('resize', resizeCanvas);
   }, []);
 
+  // Main render loop
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -228,11 +316,35 @@ export const AnnotationCanvas: React.FC = () => {
       ctx.restore();
     }
 
-    for (const box of labeledBoxes) {
-      drawLabeledBox(ctx, box, transform, selectedIds.has(box.tempId));
+    if (isProjectMode) {
+      // Draw v2 annotations (bbox + polygon)
+      for (const ann of annotations) {
+        const color = getLabelColor(ann.label, projectLabels);
+        const isSelected = annotSelectedIds.has(ann.id);
+        if (ann.geometry.type === 'bbox') {
+          const coords = ann.geometry.coordinates as [number, number, number, number];
+          const box: LabeledBox = {
+            tempId: ann.id,
+            ocr_id: null,
+            text: '',
+            bbox: coords,
+            fieldType: ann.label as never,
+          };
+          drawLabeledBox(ctx, box, transform, isSelected, false, projectLabels);
+        } else if (ann.geometry.type === 'polygon') {
+          const pts = ann.geometry.coordinates as [number, number][];
+          drawPolygonAnnotation(ctx, pts, transform, color, isSelected, true, ann.label);
+        }
+      }
+    } else {
+      // Invoice mode: draw LabeledBoxes from invoiceStore
+      for (const box of labeledBoxes) {
+        drawLabeledBox(ctx, box, transform, selectedIds.has(box.tempId), false, []);
+      }
     }
 
-    if (drawingBox) {
+    // Drawing preview
+    if (drawingBox && (tool === 'draw' || tool === 'bbox')) {
       const preview: LabeledBox = {
         tempId: '__preview__',
         ocr_id: null,
@@ -245,9 +357,26 @@ export const AnnotationCanvas: React.FC = () => {
         ],
         fieldType: 'unassigned',
       };
-      drawLabeledBox(ctx, preview, transform, false, true);
+      drawLabeledBox(ctx, preview, transform, false, true, []);
     }
-  }, [image, labeledBoxes, selectedIds, transform, drawingBox]);
+
+    // Polygon in progress
+    if (polygonInProgress && polygonInProgress.length > 0) {
+      drawPolygonAnnotation(ctx, polygonInProgress, transform, '#3B82F6', false, false);
+    }
+  }, [
+    image,
+    labeledBoxes,
+    selectedIds,
+    transform,
+    drawingBox,
+    polygonInProgress,
+    annotations,
+    annotSelectedIds,
+    isProjectMode,
+    projectLabels,
+    tool,
+  ]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -313,6 +442,26 @@ export const AnnotationCanvas: React.FC = () => {
     };
   }, [scrollDrag, transform, setTransform]);
 
+  // Handle ESC to cancel polygon
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && polygonInProgress) {
+        setPolygonInProgress(null);
+      }
+      // Enter or double-check: close polygon
+      if (e.key === 'Enter' && polygonInProgress && polygonInProgress.length >= 3) {
+        const label = projectLabels[0]?.name ?? 'unassigned';
+        addAnnotation(label, {
+          type: 'polygon',
+          coordinates: polygonInProgress as [number, number][],
+        });
+        setPolygonInProgress(null);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [polygonInProgress, addAnnotation, projectLabels]);
+
   const handleMouseDown = useCallback(
     (e: React.MouseEvent) => {
       const canvas = canvasRef.current;
@@ -330,53 +479,113 @@ export const AnnotationCanvas: React.FC = () => {
       }
       if (e.button !== 0) return;
 
-      if (tool === 'draw') {
+      if (tool === 'polygon') {
+        // Each click adds a vertex
+        setPolygonInProgress((prev) => {
+          const pts = prev ?? [];
+          // Close if clicking near first vertex
+          if (pts.length >= 3) {
+            const first = pts[0];
+            const distSq =
+              (imagePoint.x - first[0]) ** 2 + (imagePoint.y - first[1]) ** 2;
+            const threshold = (12 / transform.scale) ** 2;
+            if (distSq < threshold) {
+              // Close polygon
+              const label = projectLabels[0]?.name ?? 'unassigned';
+              addAnnotation(label, {
+                type: 'polygon',
+                coordinates: pts as [number, number][],
+              });
+              return null;
+            }
+          }
+          return [...pts, [imagePoint.x, imagePoint.y] as [number, number]];
+        });
+        return;
+      }
+
+      if (tool === 'draw' || tool === 'bbox') {
         startDrawing(imagePoint.x, imagePoint.y);
         setDrawingBox({ x: imagePoint.x, y: imagePoint.y, width: 0, height: 0 });
       } else if (tool === 'select') {
-        if (selectedIds.size === 1) {
-          const selId = [...selectedIds][0];
-          const selBox = labeledBoxes.find((b) => b.tempId === selId);
-          if (selBox) {
-            const handle = getHandleAtPoint(canvasX, canvasY, selBox.bbox, transform);
-            if (handle) {
-              setDragState({
-                handle,
-                startPoint: imagePoint,
-                originalBbox: [...selBox.bbox] as [number, number, number, number],
-                tempId: selId,
-              });
-              return;
+        if (!isProjectMode) {
+          // Invoice mode select
+          if (selectedIds.size === 1) {
+            const selId = [...selectedIds][0];
+            const selBox = labeledBoxes.find((b) => b.tempId === selId);
+            if (selBox) {
+              const handle = getHandleAtPoint(canvasX, canvasY, selBox.bbox, transform);
+              if (handle) {
+                setDragState({
+                  handle,
+                  startPoint: imagePoint,
+                  originalBbox: [...selBox.bbox] as [number, number, number, number],
+                  tempId: selId,
+                });
+                return;
+              }
             }
           }
-        }
 
-        let clicked: LabeledBox | undefined;
-        for (let i = labeledBoxes.length - 1; i >= 0; i--) {
-          const b = labeledBoxes[i];
-          if (
-            imagePoint.x >= b.bbox[0] && imagePoint.x <= b.bbox[2] &&
-            imagePoint.y >= b.bbox[1] && imagePoint.y <= b.bbox[3]
-          ) {
-            clicked = b;
-            break;
+          let clicked: LabeledBox | undefined;
+          for (let i = labeledBoxes.length - 1; i >= 0; i--) {
+            const b = labeledBoxes[i];
+            if (
+              imagePoint.x >= b.bbox[0] && imagePoint.x <= b.bbox[2] &&
+              imagePoint.y >= b.bbox[1] && imagePoint.y <= b.bbox[3]
+            ) {
+              clicked = b;
+              break;
+            }
           }
-        }
 
-        if (clicked) {
-          selectBox(clicked.tempId, e.shiftKey);
-          setDragState({
-            handle: 'body',
-            startPoint: imagePoint,
-            originalBbox: [...clicked.bbox] as [number, number, number, number],
-            tempId: clicked.tempId,
-          });
+          if (clicked) {
+            selectBox(clicked.tempId, e.shiftKey);
+            setDragState({
+              handle: 'body',
+              startPoint: imagePoint,
+              originalBbox: [...clicked.bbox] as [number, number, number, number],
+              tempId: clicked.tempId,
+            });
+          } else {
+            clearSelection();
+          }
         } else {
-          clearSelection();
+          // Project mode select: click on bbox annotations
+          let clickedId: string | null = null;
+          for (let i = annotations.length - 1; i >= 0; i--) {
+            const ann = annotations[i];
+            if (ann.geometry.type === 'bbox') {
+              const [x1, y1, x2, y2] = ann.geometry.coordinates as [number, number, number, number];
+              if (imagePoint.x >= x1 && imagePoint.x <= x2 && imagePoint.y >= y1 && imagePoint.y <= y2) {
+                clickedId = ann.id;
+                break;
+              }
+            }
+          }
+          if (clickedId) {
+            selectAnnotation(clickedId, e.shiftKey);
+          } else {
+            useAnnotationStore.getState().clearSelection();
+          }
         }
       }
     },
-    [tool, transform, labeledBoxes, selectedIds, startDrawing, startPanning, selectBox, clearSelection]
+    [
+      tool,
+      transform,
+      labeledBoxes,
+      selectedIds,
+      startDrawing,
+      startPanning,
+      selectBox,
+      clearSelection,
+      isProjectMode,
+      annotations,
+      selectAnnotation,
+      addAnnotation,
+      projectLabels,
+    ]
   );
 
   const handleMouseMove = useCallback(
@@ -445,7 +654,18 @@ export const AnnotationCanvas: React.FC = () => {
         }
       }
     },
-    [isPanning, isDrawing, drawStartPoint, dragState, transform, pan, tool, selectedIds, labeledBoxes, updateBoxBbox]
+    [
+      isPanning,
+      isDrawing,
+      drawStartPoint,
+      dragState,
+      transform,
+      pan,
+      tool,
+      selectedIds,
+      labeledBoxes,
+      updateBoxBbox,
+    ]
   );
 
   const handleMouseUp = useCallback(
@@ -457,12 +677,25 @@ export const AnnotationCanvas: React.FC = () => {
       }
       if (isDrawing && drawingBox) {
         if (drawingBox.width > MIN_BOX_SIZE && drawingBox.height > MIN_BOX_SIZE) {
-          addManualBox([
-            Math.round(drawingBox.x),
-            Math.round(drawingBox.y),
-            Math.round(drawingBox.x + drawingBox.width),
-            Math.round(drawingBox.y + drawingBox.height),
-          ]);
+          if (isProjectMode) {
+            const label = projectLabels[0]?.name ?? 'unassigned';
+            addAnnotation(label, {
+              type: 'bbox',
+              coordinates: [
+                Math.round(drawingBox.x),
+                Math.round(drawingBox.y),
+                Math.round(drawingBox.x + drawingBox.width),
+                Math.round(drawingBox.y + drawingBox.height),
+              ] as [number, number, number, number],
+            });
+          } else {
+            addManualBox([
+              Math.round(drawingBox.x),
+              Math.round(drawingBox.y),
+              Math.round(drawingBox.x + drawingBox.width),
+              Math.round(drawingBox.y + drawingBox.height),
+            ]);
+          }
         }
         stopDrawing();
         setDrawingBox(null);
@@ -470,12 +703,24 @@ export const AnnotationCanvas: React.FC = () => {
       }
       if (dragState) setDragState(null);
     },
-    [isPanning, isDrawing, drawingBox, dragState, addManualBox, stopDrawing, stopPanning]
+    [
+      isPanning,
+      isDrawing,
+      drawingBox,
+      dragState,
+      addManualBox,
+      stopDrawing,
+      stopPanning,
+      isProjectMode,
+      addAnnotation,
+      projectLabels,
+    ]
   );
 
   const getCursor = () => {
     if (isPanning) return 'grabbing';
-    if (tool === 'draw') return 'crosshair';
+    if (tool === 'draw' || tool === 'bbox') return 'crosshair';
+    if (tool === 'polygon') return 'crosshair';
     return 'default';
   };
 
@@ -518,6 +763,11 @@ export const AnnotationCanvas: React.FC = () => {
             <p className="text-lg">No image selected</p>
             <p className="text-sm">Upload images to get started</p>
           </div>
+        </div>
+      )}
+      {tool === 'polygon' && polygonInProgress && polygonInProgress.length > 0 && (
+        <div className="absolute top-2 left-1/2 -translate-x-1/2 bg-black/70 text-white text-xs px-3 py-1 rounded-full pointer-events-none">
+          {polygonInProgress.length} vertices — click near start to close, Enter to finish, Esc to cancel
         </div>
       )}
       {showHBar && (

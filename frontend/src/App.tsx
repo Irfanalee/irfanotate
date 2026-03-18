@@ -1,22 +1,31 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Layout } from './components/Layout';
 import { Toolbar } from './components/Toolbar';
 import { ImageSidebar } from './components/ImageSidebar';
 import { AnnotationCanvas } from './components/AnnotationCanvas';
 import { FieldLabelDropdown } from './components/FieldLabelDropdown';
 import { InvoicePanel } from './components/InvoicePanel';
+import { AnnotationPanel } from './components/AnnotationPanel';
+import { ProjectDashboard } from './components/ProjectDashboard';
 import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts';
 import { useImageStore } from './store/imageStore';
 import { useInvoiceStore } from './store/invoiceStore';
+import { useProjectStore } from './store/projectStore';
 import { fetchImages } from './api/images';
 import { fetchInvoiceAnnotation, saveInvoiceAnnotation } from './api/invoice';
 import { getOcrCache, runOcr } from './api/ocr';
+import type { Project } from './types';
 
-function App() {
+type AppView = 'dashboard' | 'workspace';
+
+function WorkspaceView() {
   const { images, currentIndex, setImages, setLoading, setError, setOcrStatus, setIsAnnotated } =
     useImageStore();
-  const { clearAll, loadInvoiceAnnotation, setOcrBoxes, buildSavePayload, isDirty, setSaving, markClean } =
+  const { clearAll, loadInvoiceAnnotation, setOcrBoxes, buildSavePayload, isDirty, setSaving } =
     useInvoiceStore();
+  const { labels: projectLabels } = useProjectStore();
+
+  const isProjectMode = projectLabels.length > 0;
 
   const prevIndexRef = useRef<number | null>(null);
   const currentImage = images[currentIndex];
@@ -53,8 +62,8 @@ function App() {
     prevIndexRef.current = currentIndex;
 
     const run = async () => {
-      // Auto-save previous image if dirty
-      if (prevIdx !== null && prevIdx !== currentIndex && isDirty) {
+      // Auto-save previous image if dirty (invoice mode only)
+      if (prevIdx !== null && prevIdx !== currentIndex && isDirty && !isProjectMode) {
         const prevImage = images[prevIdx];
         if (prevImage) {
           setSaving(true);
@@ -72,12 +81,14 @@ function App() {
       if (cancelled) return;
       clearAll();
 
-      // Load existing annotation (always succeeds — returns empty structure if none)
-      try {
-        const annotation = await fetchInvoiceAnnotation(currentFilename);
-        if (!cancelled) loadInvoiceAnnotation(annotation);
-      } catch (e) {
-        console.error('Failed to load annotation:', e);
+      if (!isProjectMode) {
+        // Invoice mode: load existing annotation
+        try {
+          const annotation = await fetchInvoiceAnnotation(currentFilename);
+          if (!cancelled) loadInvoiceAnnotation(annotation);
+        } catch (e) {
+          console.error('Failed to load annotation:', e);
+        }
       }
 
       if (cancelled) return;
@@ -108,7 +119,7 @@ function App() {
 
     run();
     return () => { cancelled = true; };
-  }, [currentFilename, currentIndex]);
+  }, [currentFilename, currentIndex, isProjectMode]);
 
   return (
     <Layout>
@@ -117,11 +128,50 @@ function App() {
         <Toolbar />
         <div className="flex-1 flex overflow-hidden relative">
           <AnnotationCanvas />
-          <FieldLabelDropdown />
+          {!isProjectMode && <FieldLabelDropdown />}
         </div>
       </div>
-      <InvoicePanel />
+      {isProjectMode ? <AnnotationPanel /> : <InvoicePanel />}
     </Layout>
+  );
+}
+
+function App() {
+  const [view, setView] = useState<AppView>('dashboard');
+  const { setCurrentProject, currentProject } = useProjectStore();
+
+  const handleOpenProject = (project: Project) => {
+    setCurrentProject(project);
+    setView('workspace');
+  };
+
+  const handleBackToDashboard = () => {
+    setCurrentProject(null);
+    setView('dashboard');
+  };
+
+  if (view === 'dashboard') {
+    return <ProjectDashboard onOpenProject={handleOpenProject} />;
+  }
+
+  return (
+    <div className="flex flex-col h-screen">
+      <div className="bg-white border-b border-gray-200 px-4 py-2 flex items-center gap-3 flex-shrink-0">
+        <button
+          onClick={handleBackToDashboard}
+          className="text-sm text-blue-600 hover:text-blue-800 font-medium flex items-center gap-1"
+        >
+          ← Projects
+        </button>
+        <div className="h-4 w-px bg-gray-300" />
+        <span className="text-sm text-gray-700 font-medium">
+          {currentProject?.name ?? 'Workspace'}
+        </span>
+      </div>
+      <div className="flex-1 h-full overflow-hidden">
+        <WorkspaceView />
+      </div>
+    </div>
   );
 }
 

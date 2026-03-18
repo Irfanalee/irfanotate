@@ -2,36 +2,75 @@ import { useEffect, useCallback } from 'react';
 import { useCanvasStore } from '../store/canvasStore';
 import { useInvoiceStore } from '../store/invoiceStore';
 import { useImageStore } from '../store/imageStore';
+import { useProjectStore } from '../store/projectStore';
+import { useAnnotationStore } from '../store/annotationStore';
 import { saveInvoiceAnnotation } from '../api/invoice';
+import { saveAnnotation } from '../api/annotations';
 
 export function useKeyboardShortcuts() {
   const { setTool, zoomIn, zoomOut } = useCanvasStore();
   const {
     selectedIds,
     deleteBox,
-    isDirty,
-    setSaving,
-    markClean,
+    isDirty: invoiceIsDirty,
+    setSaving: invoiceSetSaving,
+    markClean: invoiceMarkClean,
     buildSavePayload,
     createLineItem,
   } = useInvoiceStore();
   const { nextImage, prevImage, images, currentIndex, setIsAnnotated } = useImageStore();
+  const { currentProject } = useProjectStore();
+  const {
+    isDirty: annotIsDirty,
+    setSaving: annotSetSaving,
+    markClean: annotMarkClean,
+    buildSavePayload: annotBuildPayload,
+  } = useAnnotationStore();
 
   const currentImage = images[currentIndex];
+  const isProjectMode = (currentProject?.schema?.labels?.length ?? 0) > 0;
 
   const handleSave = useCallback(async () => {
-    if (!currentImage || !isDirty) return;
-    setSaving(true);
-    try {
-      await saveInvoiceAnnotation(currentImage.filename, buildSavePayload());
-      markClean();
-      setIsAnnotated(currentImage.filename, true);
-    } catch (error) {
-      console.error('Failed to save:', error);
-    } finally {
-      setSaving(false);
+    if (!currentImage) return;
+
+    if (isProjectMode) {
+      if (!annotIsDirty) return;
+      annotSetSaving(true);
+      try {
+        await saveAnnotation(currentImage.filename, annotBuildPayload());
+        annotMarkClean();
+        setIsAnnotated(currentImage.filename, true);
+      } catch (error) {
+        console.error('Failed to save:', error);
+      } finally {
+        annotSetSaving(false);
+      }
+    } else {
+      if (!invoiceIsDirty) return;
+      invoiceSetSaving(true);
+      try {
+        await saveInvoiceAnnotation(currentImage.filename, buildSavePayload());
+        invoiceMarkClean();
+        setIsAnnotated(currentImage.filename, true);
+      } catch (error) {
+        console.error('Failed to save:', error);
+      } finally {
+        invoiceSetSaving(false);
+      }
     }
-  }, [currentImage, isDirty, buildSavePayload, setSaving, markClean, setIsAnnotated]);
+  }, [
+    currentImage,
+    isProjectMode,
+    invoiceIsDirty,
+    annotIsDirty,
+    buildSavePayload,
+    annotBuildPayload,
+    invoiceSetSaving,
+    annotSetSaving,
+    invoiceMarkClean,
+    annotMarkClean,
+    setIsAnnotated,
+  ]);
 
   const handleKeyDown = useCallback(
     async (e: KeyboardEvent) => {
@@ -55,6 +94,9 @@ export function useKeyboardShortcuts() {
             setTool('select');
           }
           break;
+        case 'p':
+          setTool('polygon');
+          break;
         case 'delete':
         case 'backspace':
           if (selectedIds.size > 0) {
@@ -70,15 +112,16 @@ export function useKeyboardShortcuts() {
           break;
         case 'escape':
           useInvoiceStore.getState().clearSelection();
+          useAnnotationStore.getState().clearSelection();
           break;
         case 'arrowleft':
           e.preventDefault();
-          if (isDirty) await handleSave();
+          if (invoiceIsDirty || annotIsDirty) await handleSave();
           prevImage();
           break;
         case 'arrowright':
           e.preventDefault();
-          if (isDirty) await handleSave();
+          if (invoiceIsDirty || annotIsDirty) await handleSave();
           nextImage();
           break;
         case '=':
@@ -104,7 +147,8 @@ export function useKeyboardShortcuts() {
       nextImage,
       prevImage,
       handleSave,
-      isDirty,
+      invoiceIsDirty,
+      annotIsDirty,
       zoomIn,
       zoomOut,
     ]
@@ -117,12 +161,12 @@ export function useKeyboardShortcuts() {
 
   useEffect(() => {
     const handleBeforeUnload = (e: BeforeUnloadEvent) => {
-      if (isDirty) {
+      if (invoiceIsDirty || annotIsDirty) {
         e.preventDefault();
         e.returnValue = '';
       }
     };
     window.addEventListener('beforeunload', handleBeforeUnload);
     return () => window.removeEventListener('beforeunload', handleBeforeUnload);
-  }, [isDirty]);
+  }, [invoiceIsDirty, annotIsDirty]);
 }
