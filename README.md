@@ -1,29 +1,51 @@
-# Invoice Annotation Tool
+# DataForge
 
-A full-stack tool for annotating invoice documents with structured field labels. EasyOCR automatically detects text regions on load — annotators click boxes to assign field types, group rows into line items, and export structured JSON ready for model training.
+A universal data annotation platform for machine learning. Import your data — images, text, audio, or video — define a labeling schema, annotate with AI assistance, and export to any ML framework.
+
+DataForge ships as a local-first tool you run on your own machine. No cloud account required, no data leaves your computer.
+
+## What it does
+
+DataForge takes a folder of raw data, helps you (and Claude) annotate it with structured labels, and exports training-ready datasets in formats like COCO, YOLO, HuggingFace, TFRecord, and more.
+
+**Image annotation** — bounding boxes, polygons, segmentation masks, keypoints, and whole-image classification. Includes OCR for document workflows.
+
+**Text annotation** — named entity recognition (NER), text classification, sentiment labeling, relation extraction, and Q&A pair creation.
+
+**Audio annotation** — waveform-based segment labeling, speaker diarization, and transcription editing with Whisper auto-transcription.
+
+**Video annotation** — frame-by-frame object annotation with tracking interpolation between keyframes, temporal segment labeling.
+
+**AI-powered** — Claude auto-annotates your data using your schema and a few human examples. Active learning surfaces only the uncertain cases for human review, so you label less and ship faster.
 
 ## Features
 
-- **Auto OCR**: EasyOCR runs automatically on each document and overlays detected text regions as colored bounding boxes
-- **Field Labeling**: Click any box to assign it a field type (invoice number, description, quantity, etc.) via a dropdown
-- **Line Item Grouping**: Shift+click multiple boxes in a table row, then press `G` to group them as a line item
-- **Manual Boxes**: Draw additional boxes for text OCR missed using Draw mode
-- **Structured JSON Output**: Each document saves as `dataset/annotations/{name}.json` with `ocr_raw`, `line_items`, and `header_fields`
-- **OCR Caching**: OCR results cached in `dataset/ocr/` — revisiting an image is instant
-- **Progress Tracking**: Sidebar shows OCR status (pending / running / done / error) and annotated count per image
-- **Zoom / Pan / Scrollbars**: Full canvas navigation with scroll-to-pan and Ctrl+scroll-to-zoom
+- **Schema-driven projects** — Define your own labels, colors, keyboard shortcuts, and per-label attributes. No hardcoded field types.
+- **Project templates** — Start instantly with pre-built schemas for invoice extraction, COCO object detection, document layout, NER, medical imaging, and more.
+- **Auto OCR** — EasyOCR runs on document images automatically, overlaying detected text as interactive bounding boxes.
+- **Claude auto-annotation** — AI labels your data using few-shot examples from your own annotations. Adapts to any schema.
+- **Active learning** — AI confidence scoring prioritizes the hardest samples for human review. You only touch what matters.
+- **Universal export** — COCO, YOLO, Pascal VOC, HuggingFace, TFRecord, Label Studio, CVAT, CreateML, CoNLL, Claude fine-tuning JSONL, Datumaro, and custom schemas.
+- **Dataset splitting** — Random, stratified, or grouped train/val/test splits built into the export flow.
+- **Pipeline builder** — A Claude skill that scaffolds entire annotation-to-training workflows from a natural language description.
+- **Quality auditor** — Checks for labeling inconsistencies, missing annotations, class imbalance, and generates quality reports.
+- **Full canvas tools** — Draw, select, resize, polygon, brush, keypoint, and magic-wand tools with zoom, pan, and keyboard shortcuts.
+- **Undo/redo** — Full history stack for all annotation actions.
+- **Auto-save** — Annotations save automatically when navigating between items.
 
 ## Tech Stack
 
-- **Frontend**: React + TypeScript + Vite + Tailwind CSS + Zustand
-- **Backend**: FastAPI (Python) + SQLAlchemy + SQLite
-- **OCR**: EasyOCR (local, GPU optional, no API key needed)
-
----
+- **Frontend**: React 18, TypeScript (strict), Vite, Tailwind CSS, Zustand
+- **Backend**: FastAPI, SQLAlchemy 2.0, Pydantic v2, Python 3.12+
+- **Database**: SQLite (local) / PostgreSQL (cloud)
+- **OCR**: EasyOCR (local, GPU optional)
+- **AI**: Anthropic Claude API (schema-driven prompts)
+- **Audio**: wavesurfer.js (frontend), Whisper (transcription)
+- **Video**: OpenCV / FFmpeg (frame extraction)
 
 ## Quick Start
 
-### 1. Backend
+### Backend
 
 ```bash
 cd backend
@@ -33,11 +55,11 @@ pip install -r requirements.txt
 python run.py
 ```
 
-> **Note:** First `pip install` downloads EasyOCR + PyTorch (~800 MB). First OCR run per server session takes 5–15 seconds to load the model; subsequent runs are 1–3 seconds.
+API runs at `http://localhost:8000`
 
-API available at `http://localhost:8000`
+First install downloads EasyOCR + PyTorch (~800 MB). First OCR run per session takes 5–15 seconds to load the model; subsequent runs are 1–3 seconds.
 
-### 2. Frontend
+### Frontend
 
 ```bash
 cd frontend
@@ -45,162 +67,37 @@ npm install
 npm run dev
 ```
 
-UI available at `http://localhost:5173`
+UI runs at `http://localhost:5173`
 
-### 3. Add Images
+### Docker (full stack)
 
-Upload invoice images via the **Upload Images** button in the sidebar, or place them directly in `dataset/images/`. Supported formats: JPG, PNG, BMP, TIFF, WebP.
-
----
-
-## Annotation Flow
-
-Here is the complete end-to-end flow for annotating an invoice document.
-
-### Step 1 — Upload
-
-Click **Upload Images** in the left sidebar and select one or more invoice images. Each image appears in the sidebar with a gray dot (●) indicating OCR has not yet run.
-
-```
-Sidebar status indicators:
-  ○  gray   = OCR pending
-  ◌  yellow = OCR running
-  ●  blue   = OCR done
-  ✗  red    = OCR error
-  ✓  green  = annotation saved
+```bash
+docker-compose -f docker-compose.local.yml up
 ```
 
----
+## How It Works
 
-### Step 2 — OCR Runs Automatically
+### 1. Create a project
 
-When you click an image, the tool:
-1. Loads any existing saved annotation for that image.
-2. Checks the OCR cache (`dataset/ocr/{name}.json`).
-3. If no cache exists, calls EasyOCR and shows **"OCR: Running…"** in the toolbar.
-4. Once done, colored bounding boxes appear over every detected text region — all initially gray (unassigned).
+Choose your data type (image, text, audio, video) and annotation type (bounding box, polygon, NER, classification, etc.). Pick a template or define your own label schema with names, colors, shortcuts, and attributes.
 
-OCR only runs once per image. Revisiting an image loads from cache instantly.
+### 2. Import data
 
----
+Upload files through the UI or point to a folder on disk. Supported formats: JPG, PNG, BMP, TIFF, WebP (images), TXT, CSV, JSON, JSONL (text), WAV, MP3, FLAC (audio), MP4, AVI, MOV (video).
 
-### Step 3 — Assign Field Labels
+### 3. Annotate
 
-**Rule: always annotate the value, never the label text.**
+Open any item and start labeling. Use the toolbar to switch between annotation tools (bbox, polygon, brush, keypoint, select). Click or draw to create annotations, then assign a label from your schema. Keyboard shortcuts (1–9) assign labels instantly.
 
-| Text on invoice | Action |
-|---|---|
-| `"Invoice no:"` | Leave as unassigned (it's a static label) |
-| `"22862792"` | Click → assign `invoice_number` |
-| `"Date of issue:"` | Leave as unassigned |
-| `"2024-01-15"` | Click → assign `invoice_date` |
-| `"Acme Corp"` | Click → assign `vendor_name` |
+For document images, OCR runs automatically and overlays detected text regions. Click a region to assign its label.
 
-**How to assign:**
-1. Make sure you are in **Select** mode (`S`).
-2. Click a box — a dropdown appears showing all field types.
-3. Optionally edit the OCR text in the input at the top of the dropdown (to correct typos).
-4. Click the desired field type button. The box immediately changes color.
+### 4. Let AI help
 
----
+Run Claude auto-annotation on your project. It reads your schema, loads a few human-annotated examples for context, and labels the rest. Low-confidence items are queued for human review — you only fix the hard cases.
 
-### Step 4 — Understand Header vs Line Item Fields
+### 5. Export
 
-#### Header Fields — appear **once** per invoice
-
-| Field | What it captures | Example |
-|---|---|---|
-| `invoice_number` | Unique document identifier | `INV-2024-001`, `22862792` |
-| `invoice_date` | Date of issue | `2024-01-15`, `15/01/2024` |
-| `vendor_name` | Seller / supplier name | `Acme Corp` |
-| `total_gross` | Final total including tax | `$1,250.00` |
-
-Header fields are stored directly in `header_fields` in the output JSON. There is one value per field per document.
-
-#### Line Item Fields — **repeat** for each product/service row
-
-| Field | What it captures | Example |
-|---|---|---|
-| `description` | Product or service name | `Web Design Services` |
-| `quantity` | How many units | `5` |
-| `unit_measure` | Unit type | `hours`, `pcs`, `kg` |
-| `net_price` | Price per unit (before tax) | `$150.00` |
-| `net_worth` | Total before tax (`qty × net_price`) | `$750.00` |
-| `vat` | Tax rate or amount | `23%`, `$172.50` |
-| `gross_worth` | Total after tax | `$922.50` |
-
-Line item fields must be **grouped into rows** (see Step 5). A single invoice can have many line items.
-
----
-
-### Step 5 — Group Line Items
-
-Each row in the invoice table is one line item. After labeling the fields in a row:
-
-1. **Shift+click** each box in that row to multi-select them (they get dashed outlines).
-2. Press **`G`** — or click **Create Line Item** in the right panel.
-3. The row appears in the **Line Items** tab of the right panel.
-4. Repeat for each row in the table.
-
-> **Requirement:** All selected boxes must have line item field types (not header types). Mixed selections are rejected silently.
-
----
-
-### Step 6 — Handle Missed Text
-
-If OCR missed a region (e.g. a faint number or rotated text):
-
-1. Press **`D`** to switch to Draw mode (cursor becomes a crosshair).
-2. Click and drag to draw a box around the missed text.
-3. A new unassigned box is created — assign its field type via the dropdown.
-4. Press **`S`** to return to Select mode.
-
----
-
-### Step 7 — Save
-
-Press **`Ctrl+S`** or click **Save** in the right panel (or toolbar).
-
-The annotation is written to `dataset/annotations/{name}.json`:
-
-```json
-{
-  "document_id": "invoice_001",
-  "image_path": "images/invoice_001.jpg",
-  "ocr_raw": [
-    { "ocr_id": "ocr_0", "text": "22862792", "bbox": [120, 45, 310, 80], "confidence": 0.98 }
-  ],
-  "header_fields": {
-    "invoice_number": { "text": "22862792", "bbox": [120, 45, 310, 80], "ocr_id": "ocr_0" },
-    "invoice_date":   { "text": "2024-01-15", "bbox": [420, 45, 580, 80], "ocr_id": "ocr_3" },
-    "vendor_name":    { "text": "Acme Corp", "bbox": [50, 10, 200, 38], "ocr_id": "ocr_1" },
-    "total_gross":    { "text": "$1,250.00", "bbox": [680, 520, 800, 545], "ocr_id": "ocr_41" }
-  },
-  "line_items": [
-    {
-      "line_item_id": 1,
-      "fields": {
-        "description": { "text": "Web Design Services", "bbox": [50, 200, 320, 220], "ocr_id": "ocr_10" },
-        "quantity":    { "text": "5",       "bbox": [330, 200, 370, 220], "ocr_id": "ocr_11" },
-        "net_price":   { "text": "$150.00", "bbox": [380, 200, 460, 220], "ocr_id": "ocr_12" },
-        "net_worth":   { "text": "$750.00", "bbox": [470, 200, 550, 220], "ocr_id": "ocr_13" },
-        "vat":         { "text": "23%",     "bbox": [560, 200, 610, 220], "ocr_id": "ocr_14" },
-        "gross_worth": { "text": "$922.50", "bbox": [620, 200, 710, 220], "ocr_id": "ocr_15" }
-      }
-    }
-  ]
-}
-```
-
-The sidebar marks the image with a green **✓** once saved.
-
----
-
-### Step 8 — Navigate to Next Invoice
-
-Press `→` (right arrow) or click the next image in the sidebar. Any unsaved changes are auto-saved before switching.
-
----
+Choose a format (COCO, YOLO, HuggingFace, etc.), configure your train/val/test split, and export. The dataset is ready for training.
 
 ## Keyboard Shortcuts
 
@@ -208,110 +105,176 @@ Press `→` (right arrow) or click the next image in the sidebar. Any unsaved ch
 |-----|--------|
 | `S` | Select mode |
 | `D` | Draw box mode |
-| `G` | Group selected boxes as a line item |
-| `Delete` / `Backspace` | Delete selected box(es) |
+| `P` | Polygon mode |
+| `B` | Brush (segmentation) mode |
+| `K` | Keypoint mode |
+| `G` | Group selected boxes (line item) |
+| `1`–`9` | Assign label by shortcut |
+| `Delete` / `Backspace` | Delete selected annotation(s) |
 | `Escape` | Clear selection |
-| `← →` | Previous / next image (auto-saves) |
-| `Ctrl+S` | Save annotation |
+| `Ctrl+Z` | Undo |
+| `Ctrl+Shift+Z` | Redo |
+| `Ctrl+S` | Save |
+| `← →` | Previous / next item (auto-saves) |
 | `Ctrl+Scroll` | Zoom in / out |
-| `Scroll` | Pan image |
-| `Middle mouse drag` | Pan image |
-
----
-
-## Field Color Reference
-
-| Field | Color |
-|---|---|
-| `description` | Blue |
-| `quantity` | Green |
-| `unit_measure` | Purple |
-| `net_price` | Amber |
-| `net_worth` | Red |
-| `vat` | Pink |
-| `gross_worth` | Teal |
-| `invoice_number` | Orange |
-| `invoice_date` | Indigo |
-| `vendor_name` | Lime |
-| `total_gross` | Cyan |
-| `other` | Gray |
-| `unassigned` | Light gray |
-
----
+| `Scroll` | Pan |
+| `Middle mouse drag` | Pan |
 
 ## Project Structure
 
 ```
-text-region-annotation/
+dataforge/
+├── CLAUDE.md                    # Project briefing for Claude
+├── .claude/
+│   ├── skills/                  # Dev workflow skills
+│   └── settings.json
+├── docs/
+│   ├── architecture.md          # System design decisions
+│   ├── annotation-format.md     # Universal annotation spec
+│   ├── schema-system.md         # Project schema reference
+│   ├── export-formats.md        # Export format details
+│   ├── ai-pipeline.md           # AI annotation architecture
+│   ├── runbooks.md              # Operational procedures
+│   └── team-decisions.md        # ADRs and trade-offs
 ├── backend/
+│   ├── CLAUDE.md
 │   ├── app/
-│   │   ├── main.py           # FastAPI app
-│   │   ├── config.py         # Configuration
-│   │   ├── database.py       # SQLite setup + migrations
-│   │   ├── models.py         # ORM models (ImageRecord)
-│   │   ├── schemas.py        # Pydantic schemas
-│   │   └── routers/
-│   │       ├── images.py     # Image management endpoints
-│   │       ├── ocr.py        # EasyOCR endpoints + caching
-│   │       └── invoice.py    # Invoice annotation endpoints
+│   │   ├── main.py              # FastAPI app + CORS + startup
+│   │   ├── config.py            # Settings via environment variables
+│   │   ├── database.py          # SQLAlchemy engine + session
+│   │   ├── models/              # ORM models (Project, ImageRecord, etc.)
+│   │   ├── schemas/             # Pydantic request/response models
+│   │   ├── routers/             # API endpoints
+│   │   ├── services/            # Business logic layer
+│   │   ├── exporters/           # Export format implementations
+│   │   ├── ai/                  # Claude prompt templates + parsers
+│   │   └── storage/             # Storage backend abstraction
+│   ├── migrations/              # Alembic database migrations
+│   ├── tests/
 │   ├── requirements.txt
+│   ├── Dockerfile
 │   └── run.py
 ├── frontend/
-│   └── src/
-│       ├── components/
-│       │   ├── AnnotationCanvas.tsx   # Canvas with zoom/pan/draw/select
-│       │   ├── FieldLabelDropdown.tsx # Field assignment popup
-│       │   ├── InvoicePanel.tsx       # Line items + headers + save
-│       │   ├── ImageSidebar.tsx       # Image list + upload
-│       │   ├── Toolbar.tsx            # Tools + zoom + OCR status
-│       │   ├── Layout.tsx             # App shell + help button
-│       │   └── HelpModal.tsx          # In-app help documentation
-│       ├── store/
-│       │   ├── invoiceStore.ts        # Labeled boxes, line items, header fields
-│       │   ├── imageStore.ts          # Image list, OCR status, annotated flag
-│       │   └── canvasStore.ts         # Tool mode, zoom/pan transform
-│       ├── api/
-│       │   ├── ocr.ts                 # OCR cache + trigger
-│       │   ├── invoice.ts             # Load / save invoice annotations
-│       │   └── images.ts              # Image list + upload + delete
-│       ├── hooks/
-│       │   └── useKeyboardShortcuts.ts
-│       └── types/index.ts             # All TypeScript types + FIELD_COLORS
-├── dataset/
-│   ├── images/       # Source invoice images
-│   ├── ocr/          # Cached EasyOCR results ({name}.json)
-│   └── annotations/  # Saved invoice annotations ({name}.json)
-└── README.md
+│   ├── CLAUDE.md
+│   ├── src/
+│   │   ├── components/
+│   │   │   ├── core/            # Shared UI primitives
+│   │   │   ├── project/         # Project dashboard + wizard
+│   │   │   ├── annotators/      # Image, text, audio, video annotators
+│   │   │   ├── ai/              # Auto-annotation controls
+│   │   │   ├── export/          # Export wizard + format selector
+│   │   │   └── analytics/       # Stats + quality dashboard
+│   │   ├── stores/              # Zustand state management
+│   │   ├── api/                 # Backend API client layer
+│   │   ├── hooks/               # Custom React hooks
+│   │   └── types/               # TypeScript type definitions
+│   ├── package.json
+│   ├── vite.config.ts
+│   └── Dockerfile
+├── claude-skills/
+│   ├── dataforge-annotator/     # AI auto-annotation skill
+│   ├── dataforge-pipeline/      # Project scaffolding skill
+│   └── dataforge-quality/       # Quality audit skill
+├── dataset/                     # Default data directory
+│   ├── images/
+│   ├── annotations/
+│   ├── ocr/
+│   └── exports/
+├── docker-compose.yml
+├── docker-compose.local.yml
+└── .env.example
 ```
-
----
 
 ## API Endpoints
 
+### Projects
+
 | Method | Endpoint | Description |
 |--------|----------|-------------|
-| GET | `/api/images/` | List all images with OCR status and annotated flag |
-| GET | `/api/images/{filename}` | Serve image file |
-| POST | `/api/images/upload` | Upload image files |
-| DELETE | `/api/images/{filename}` | Delete image, OCR cache, and annotation |
-| GET | `/api/ocr/{filename}` | Get cached OCR result (404 if not run yet) |
-| POST | `/api/ocr/{filename}` | Run EasyOCR (or return cache) |
-| GET | `/api/invoice/{filename}` | Load saved invoice annotation |
-| POST | `/api/invoice/{filename}` | Save invoice annotation |
-| DELETE | `/api/invoice/{filename}` | Delete annotation, mark as unannotated |
+| POST | `/api/projects` | Create project with schema |
+| GET | `/api/projects` | List all projects |
+| GET | `/api/projects/{id}` | Get project details + schema |
+| PATCH | `/api/projects/{id}` | Update schema or settings |
+| DELETE | `/api/projects/{id}` | Archive project |
+| POST | `/api/projects/{id}/import` | Import data folder into project |
 
----
+### Data Management
 
-## Future Improvements
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/api/images/` | List data items with status |
+| GET | `/api/images/{filename}` | Serve data file |
+| POST | `/api/images/upload` | Upload files |
+| DELETE | `/api/images/{filename}` | Delete item + OCR + annotations |
 
-- [ ] **Undo/Redo**: History stack for annotation actions
-- [ ] **OCR Language Support**: Add language selector for non-English invoices
-- [ ] **Batch Export**: Export all annotations as a single combined dataset JSON
-- [ ] **Validation Warnings**: Warn before saving if required header fields are missing
-- [ ] **Cloud Storage**: Import images from Google Drive / S3
-- [ ] **Review Mode**: Side-by-side original vs annotated view for QA
+### Annotations
 
----
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/api/annotations/{filename}` | Load annotations for item |
+| POST | `/api/annotations/{filename}` | Save annotations |
+| DELETE | `/api/annotations/{filename}` | Delete annotations |
+
+### OCR
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/api/ocr/{filename}` | Get cached OCR result |
+| POST | `/api/ocr/{filename}` | Run OCR (or return cache) |
+
+### AI
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| POST | `/api/ai/auto-annotate` | Run AI annotation (SSE stream) |
+
+### Export
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/api/export/formats` | List available export formats |
+| POST | `/api/export/{format}` | Generate export |
+| GET | `/api/export/download/{format}` | Download exported dataset |
+
+## Export Formats
+
+| Format | Use Case |
+|--------|----------|
+| COCO JSON | Object detection, segmentation, keypoints |
+| YOLO | YOLOv5/v8/v9 training |
+| Pascal VOC | Classic object detection pipelines |
+| HuggingFace | Any HuggingFace model or Hub upload |
+| TFRecord | TensorFlow / Keras training |
+| Label Studio | Import into Label Studio |
+| CVAT | Import into CVAT |
+| CreateML | Apple Core ML training |
+| CoNLL | NER model training |
+| JSONL (Claude) | Claude / LLM fine-tuning |
+| Datumaro | Intel format, universal converter |
+| Custom | User-defined template-based export |
+
+## Claude Skills
+
+DataForge includes three Claude skills that can be installed into Claude Code:
+
+**dataforge-annotator** — Auto-annotates your data using Claude's vision and language capabilities. Reads the project schema, loads human examples for few-shot learning, and labels items with confidence scores. Supports active learning to minimize manual review.
+
+**dataforge-pipeline** — Scaffolds entire annotation projects from a natural language description. Analyzes sample data, suggests a schema, creates the project, and generates training scripts and Dockerfiles for popular frameworks (YOLOv8, Detectron2, HuggingFace Transformers).
+
+**dataforge-quality** — Audits annotation quality across a project. Checks for inconsistent labeling, missing annotations, bbox quality issues, class imbalance, and generates an HTML report with actionable fix suggestions.
+
+Install by copying the skill folders to `~/.claude/skills/`.
+
+## Roadmap
+
+See [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md) for the full 8-phase build plan.
+
+- **Phase 1–2**: Generalize core + text annotation (schema-driven projects, polygon tools, NER)
+- **Phase 3**: Audio and video annotation modules
+- **Phase 4**: AI pipeline (generalized auto-annotation, active learning, pipeline builder)
+- **Phase 5**: Universal export engine (12+ formats, custom schemas, dataset splitting)
+- **Phase 6**: Frontend redesign (distinctive UI, undo/redo, review mode, analytics)
+- **Phase 7–8**: Cloud-ready architecture (PostgreSQL, S3, teams, Docker) + packaged Claude skills
 
 ## License
 
