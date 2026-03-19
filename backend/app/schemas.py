@@ -159,6 +159,20 @@ class AnnotationDocumentV2(BaseModel):
     metadata: dict = {}
 
 
+class TextDocumentItem(BaseModel):
+    filename: str
+    char_count: int
+    is_annotated: bool = False
+    project_id: Optional[str] = None
+
+
+class TextUploadResponse(BaseModel):
+    uploaded: list[str]
+    failed: list[dict]
+    total_uploaded: int
+    total_failed: int
+
+
 class SaveAnnotationsRequest(BaseModel):
     version: str = "2.0"
     document_id: str

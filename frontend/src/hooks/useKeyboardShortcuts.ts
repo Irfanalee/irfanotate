@@ -113,6 +113,7 @@ export function useKeyboardShortcuts() {
         case 'escape':
           useInvoiceStore.getState().clearSelection();
           useAnnotationStore.getState().clearSelection();
+          window.getSelection()?.removeAllRanges();
           break;
         case 'arrowleft':
           e.preventDefault();

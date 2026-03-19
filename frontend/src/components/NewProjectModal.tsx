@@ -16,8 +16,8 @@ export const NewProjectModal: React.FC<NewProjectModalProps> = ({ onClose, onCre
   const [step, setStep] = useState(0);
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
-  const [dataType] = useState('image');
-  const [annotationType] = useState('bbox');
+  const [dataType, setDataType] = useState('image');
+  const [annotationType, setAnnotationType] = useState('bbox');
   const [templates, setTemplates] = useState<TemplateMeta[]>([]);
   const [selectedTemplateId, setSelectedTemplateId] = useState<string | null>(null);
   const [labels, setLabels] = useState<SchemaLabel[]>([]);
@@ -167,12 +167,19 @@ export const NewProjectModal: React.FC<NewProjectModalProps> = ({ onClose, onCre
               <p className="text-sm font-medium text-gray-700 mb-2">Data type</p>
               {[
                 { id: 'image', label: 'Image', icon: '🖼️', enabled: true },
-                { id: 'text', label: 'Text', icon: '📝', enabled: false },
+                { id: 'text', label: 'Text', icon: '📝', enabled: true },
                 { id: 'audio', label: 'Audio', icon: '🎵', enabled: false },
                 { id: 'video', label: 'Video', icon: '🎬', enabled: false },
               ].map((dt) => (
                 <div
                   key={dt.id}
+                  onClick={() => {
+                    if (!dt.enabled) return;
+                    setDataType(dt.id);
+                    setAnnotationType(dt.id === 'text' ? 'text_span' : 'bbox');
+                    setSelectedTemplateId(null);
+                    setLabels([]);
+                  }}
                   className={`flex items-center gap-3 p-3 rounded-lg border transition-all ${
                     dt.id === dataType
                       ? 'border-blue-500 bg-blue-50'
@@ -202,7 +209,7 @@ export const NewProjectModal: React.FC<NewProjectModalProps> = ({ onClose, onCre
               {templates.length === 0 ? (
                 <div className="text-sm text-gray-400 py-4 text-center">Loading templates…</div>
               ) : (
-                templates.map((tmpl) => (
+                templates.filter((t) => t.data_type === dataType).map((tmpl) => (
                   <div
                     key={tmpl.id}
                     onClick={() => handleTemplateSelect(tmpl.id)}

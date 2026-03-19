@@ -20,6 +20,7 @@ class Project(Base):
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
     images = relationship("ImageRecord", back_populates="project")
+    text_documents = relationship("TextRecord", back_populates="project")
 
 
 class ImageRecord(Base):
@@ -37,3 +38,17 @@ class ImageRecord(Base):
     project_id = Column(String, ForeignKey("projects.id"), nullable=True)
 
     project = relationship("Project", back_populates="images")
+
+
+class TextRecord(Base):
+    __tablename__ = "text_documents"
+
+    id = Column(Integer, primary_key=True, index=True)
+    filename = Column(String, unique=True, index=True)
+    char_count = Column(Integer, default=0)
+    is_annotated = Column(Boolean, default=False, server_default="0")
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    project_id = Column(String, ForeignKey("projects.id"), nullable=True)
+
+    project = relationship("Project", back_populates="text_documents")

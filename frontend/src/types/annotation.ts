@@ -1,5 +1,5 @@
 // 'draw' kept as a transition alias for backward compatibility
-export type ToolMode = 'select' | 'draw' | 'bbox' | 'polygon';
+export type ToolMode = 'select' | 'draw' | 'bbox' | 'polygon' | 'text_span';
 
 export interface BboxGeometry {
   type: 'bbox';
@@ -16,7 +16,14 @@ export interface ClassificationGeometry {
   coordinates: [];
 }
 
-export type Geometry = BboxGeometry | PolygonGeometry | ClassificationGeometry;
+export interface TextSpanGeometry {
+  type: 'text_span';
+  start: number;
+  end: number;
+  text: string;
+}
+
+export type Geometry = BboxGeometry | PolygonGeometry | ClassificationGeometry | TextSpanGeometry;
 
 export interface Annotation {
   id: string;

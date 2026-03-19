@@ -7,16 +7,54 @@ import { FieldLabelDropdown } from './components/FieldLabelDropdown';
 import { InvoicePanel } from './components/InvoicePanel';
 import { AnnotationPanel } from './components/AnnotationPanel';
 import { ProjectDashboard } from './components/ProjectDashboard';
+import { TextSidebar } from './components/TextSidebar';
+import { TextAnnotator } from './components/TextAnnotator';
 import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts';
 import { useImageStore } from './store/imageStore';
 import { useInvoiceStore } from './store/invoiceStore';
 import { useProjectStore } from './store/projectStore';
+import { useTextStore } from './store/textStore';
 import { fetchImages } from './api/images';
+import { fetchTextDocs } from './api/text';
 import { fetchInvoiceAnnotation, saveInvoiceAnnotation } from './api/invoice';
 import { getOcrCache, runOcr } from './api/ocr';
 import type { Project } from './types';
 
 type AppView = 'dashboard' | 'workspace';
+
+function TextWorkspaceView() {
+  const { setDocs, setIsLoading, setError } = useTextStore();
+  const { currentProject } = useProjectStore();
+
+  useEffect(() => {
+    const load = async () => {
+      setIsLoading(true);
+      try {
+        const docs = await fetchTextDocs(currentProject?.id);
+        setDocs(docs);
+      } catch (err) {
+        console.error('Failed to load text docs:', err);
+        setError('Failed to load documents');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    load();
+  }, [currentProject?.id, setDocs, setIsLoading, setError]);
+
+  return (
+    <Layout>
+      <TextSidebar />
+      <div className="flex-1 flex flex-col overflow-hidden">
+        <Toolbar />
+        <div className="flex-1 flex overflow-hidden">
+          <TextAnnotator />
+        </div>
+      </div>
+      <AnnotationPanel />
+    </Layout>
+  );
+}
 
 function WorkspaceView() {
   const { images, currentIndex, setImages, setLoading, setError, setOcrStatus, setIsAnnotated } =
@@ -169,7 +207,7 @@ function App() {
         </span>
       </div>
       <div className="flex-1 h-full overflow-hidden">
-        <WorkspaceView />
+        {currentProject?.data_type === 'text' ? <TextWorkspaceView /> : <WorkspaceView />}
       </div>
     </div>
   );
