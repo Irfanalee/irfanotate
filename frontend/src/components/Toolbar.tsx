@@ -3,19 +3,15 @@ import { useCanvasStore } from '../store/canvasStore';
 import { useImageStore } from '../store/imageStore';
 import { useInvoiceStore } from '../store/invoiceStore';
 import { saveInvoiceAnnotation } from '../api/invoice';
-import { fetchImages } from '../api/images';
-import { autoAnnotate } from '../api/claude';
 import { exportJsonl, exportHuggingFace, getJsonlDownloadUrl, getHuggingFaceDownloadUrl } from '../api/exportDataset';
+import { AutoAnnotateModal } from './AutoAnnotateModal';
 
 export const Toolbar: React.FC = () => {
   const { tool, setTool, transform, zoomIn, zoomOut, resetZoom } = useCanvasStore();
-  const { images, currentIndex, nextImage, prevImage, setIsAnnotated, setImages } = useImageStore();
+  const { images, currentIndex, nextImage, prevImage, setIsAnnotated } = useImageStore();
   const { isDirty, setSaving, markClean, buildSavePayload } = useInvoiceStore();
 
-  const [annotating, setAnnotating] = useState(false);
-  const [annotateProgress, setAnnotateProgress] = useState<{ current: number; total: number; filename: string } | null>(null);
-  const [annotateMsg, setAnnotateMsg] = useState<string | null>(null);
-  const [annotateError, setAnnotateError] = useState<string | null>(null);
+  const [showAutoAnnotateModal, setShowAutoAnnotateModal] = useState(false);
 
   const [exportOpen, setExportOpen] = useState(false);
   const [exporting, setExporting] = useState<string | null>(null);
@@ -47,50 +43,6 @@ export const Toolbar: React.FC = () => {
       console.error('Failed to save:', error);
     } finally {
       setSaving(false);
-    }
-  };
-
-  const handleAutoAnnotate = async () => {
-    if (annotating) return;
-    setAnnotating(true);
-    setAnnotateMsg(null);
-    setAnnotateError(null);
-    setAnnotateProgress(null);
-    try {
-      await autoAnnotate(false, 3, (event) => {
-        if (event.type === 'start') {
-          setAnnotateProgress({ current: 0, total: event.total ?? 0, filename: '' });
-        } else if (event.type === 'working') {
-          setAnnotateProgress({
-            current: event.current ?? 0,
-            total: event.total ?? 0,
-            filename: event.filename ?? '',
-          });
-        } else if (event.type === 'progress') {
-          setAnnotateProgress({
-            current: event.current ?? 0,
-            total: event.total ?? 0,
-            filename: event.filename ?? '',
-          });
-        } else if (event.type === 'done') {
-          setAnnotateProgress(null);
-          const parts = [];
-          if ((event.total_annotated ?? 0) > 0) parts.push(`✓ ${event.total_annotated} annotated`);
-          if ((event.total_skipped ?? 0) > 0)   parts.push(`⏭ ${event.total_skipped} skipped`);
-          if ((event.total_errors ?? 0) > 0)     parts.push(`✗ ${event.total_errors} errors`);
-          setAnnotateMsg(parts.length ? parts.join('  ') : 'Nothing to annotate — all done.');
-          setTimeout(() => setAnnotateMsg(null), 6000);
-          // Refresh image list
-          fetchImages().then(setImages).catch(console.error);
-        }
-      });
-    } catch (err: unknown) {
-      setAnnotateProgress(null);
-      const msg = err instanceof Error ? err.message : String(err);
-      setAnnotateError(msg.length > 80 ? msg.slice(0, 80) + '…' : msg);
-      setTimeout(() => setAnnotateError(null), 8000);
-    } finally {
-      setAnnotating(false);
     }
   };
 
@@ -137,7 +89,7 @@ export const Toolbar: React.FC = () => {
     error:   { label: 'OCR: Error',   className: 'bg-red-100 text-red-600' },
   }[ocrStatus];
 
-  const canAutoAnnotate = annotatedCount > 0 && !annotating;
+  const canAutoAnnotate = annotatedCount > 0;
 
   return (
     <div className="h-12 bg-gray-100 border-b border-gray-300 flex items-center px-4 gap-3">
@@ -146,7 +98,7 @@ export const Toolbar: React.FC = () => {
         <button
           onClick={() => setTool('select')}
           className={`px-3 py-1.5 text-sm rounded-l ${
-            tool === 'select' ? 'bg-blue-500 text-white' : 'text-gray-700 hover:bg-gray-100'
+            tool === 'select' ? 'bg-gray-800 text-white' : 'text-gray-700 hover:bg-gray-100'
           }`}
           title="Select tool (S)"
         >
@@ -155,7 +107,7 @@ export const Toolbar: React.FC = () => {
         <button
           onClick={() => setTool('draw')}
           className={`px-3 py-1.5 text-sm border-x border-gray-300 ${
-            tool === 'draw' ? 'bg-blue-500 text-white' : 'text-gray-700 hover:bg-gray-100'
+            tool === 'draw' ? 'bg-gray-800 text-white' : 'text-gray-700 hover:bg-gray-100'
           }`}
           title="Draw box tool (D)"
         >
@@ -164,7 +116,7 @@ export const Toolbar: React.FC = () => {
         <button
           onClick={() => setTool('polygon')}
           className={`px-3 py-1.5 text-sm rounded-r ${
-            tool === 'polygon' ? 'bg-blue-500 text-white' : 'text-gray-700 hover:bg-gray-100'
+            tool === 'polygon' ? 'bg-gray-800 text-white' : 'text-gray-700 hover:bg-gray-100'
           }`}
           title="Draw polygon tool (P)"
         >
@@ -223,43 +175,6 @@ export const Toolbar: React.FC = () => {
 
       <div className="flex-1" />
 
-      {/* Feedback messages */}
-      {annotateProgress && (
-        <div className="flex items-center gap-2 bg-indigo-50 border border-indigo-200 rounded px-2 py-1">
-          <span className="animate-spin text-indigo-500 text-sm">⟳</span>
-          <div className="flex flex-col leading-tight">
-            <span className="text-xs text-indigo-700 font-medium">
-              {annotateProgress.current}/{annotateProgress.total} invoices
-            </span>
-            {annotateProgress.filename && (
-              <span className="text-[10px] text-indigo-400 truncate max-w-[140px]">
-                {annotateProgress.filename}
-              </span>
-            )}
-          </div>
-          {/* Progress bar */}
-          <div className="w-16 h-1.5 bg-indigo-100 rounded-full overflow-hidden">
-            <div
-              className="h-full bg-indigo-500 rounded-full transition-all duration-300"
-              style={{
-                width: annotateProgress.total > 0
-                  ? `${(annotateProgress.current / annotateProgress.total) * 100}%`
-                  : '0%',
-              }}
-            />
-          </div>
-        </div>
-      )}
-      {annotateMsg && !annotateProgress && (
-        <span className="text-xs text-indigo-700 font-medium bg-indigo-50 px-2 py-1 rounded">
-          {annotateMsg}
-        </span>
-      )}
-      {annotateError && (
-        <span className="text-xs text-red-600 font-medium bg-red-50 px-2 py-1 rounded" title={annotateError}>
-          {annotateError}
-        </span>
-      )}
       {exportMsg && (
         <span className="text-xs text-purple-700 font-medium bg-purple-50 px-2 py-1 rounded">
           {exportMsg}
@@ -269,7 +184,7 @@ export const Toolbar: React.FC = () => {
       {/* Auto-Annotate with Claude */}
       <div className="relative group">
         <button
-          onClick={handleAutoAnnotate}
+          onClick={() => setShowAutoAnnotateModal(true)}
           disabled={!canAutoAnnotate}
           className={`px-3 py-1.5 text-sm rounded flex items-center gap-1.5 ${
             canAutoAnnotate
@@ -277,11 +192,7 @@ export const Toolbar: React.FC = () => {
               : 'bg-gray-300 text-gray-500 cursor-not-allowed'
           }`}
         >
-          {annotating ? (
-            <><span className="animate-spin inline-block">⟳</span> Annotating…</>
-          ) : (
-            <><span>✦</span> Auto-Annotate</>
-          )}
+          <span>✦</span> Auto-Annotate
         </button>
         <div className="absolute right-0 top-full mt-1 hidden group-hover:block bg-gray-800 text-white text-xs rounded px-2 py-1.5 z-50 w-64 leading-snug pointer-events-none">
           {annotatedCount === 0
@@ -289,6 +200,13 @@ export const Toolbar: React.FC = () => {
             : `Uses your ${annotatedCount} saved annotation${annotatedCount !== 1 ? 's' : ''} as few-shot examples to auto-annotate all remaining invoices with Claude AI.`}
         </div>
       </div>
+
+      {showAutoAnnotateModal && (
+        <AutoAnnotateModal
+          annotatedCount={annotatedCount}
+          onClose={() => setShowAutoAnnotateModal(false)}
+        />
+      )}
 
       {/* Export Dataset Dropdown */}
       <div className="relative" ref={exportRef}>

@@ -17,11 +17,12 @@ export async function autoAnnotate(
   overwriteExisting = false,
   maxExamples = 3,
   onEvent: (e: ProgressEvent) => void = () => {},
+  model = '',
 ): Promise<void> {
   const response = await fetch(`${API_BASE}/claude/auto-annotate`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ overwrite_existing: overwriteExisting, max_examples: maxExamples }),
+    body: JSON.stringify({ overwrite_existing: overwriteExisting, max_examples: maxExamples, model }),
   });
 
   if (!response.ok) {

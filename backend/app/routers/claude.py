@@ -174,6 +174,7 @@ def _assignments_to_invoice(
 class AutoAnnotateRequest(BaseModel):
     max_examples: int = 3          # how many annotated docs to use as few-shot
     overwrite_existing: bool = False
+    model: str = ""                # override model; falls back to settings.claude_model
 
 
 class AutoAnnotateResult(BaseModel):
@@ -309,7 +310,7 @@ async def auto_annotate(body: AutoAnnotateRequest):
                     messages = _build_messages(image_bytes, media_type, ocr_boxes, examples)
 
                     response = client.messages.create(
-                        model=settings.claude_model,
+                        model=body.model or settings.claude_model,
                         max_tokens=4096,
                         system=SYSTEM_PROMPT,
                         messages=messages,
