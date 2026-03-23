@@ -166,6 +166,29 @@ class TextDocumentItem(BaseModel):
     project_id: Optional[str] = None
 
 
+class AudioFileItem(BaseModel):
+    filename: str
+    duration_ms: int
+    is_annotated: bool = False
+    project_id: Optional[str] = None
+
+
+class VideoFileItem(BaseModel):
+    filename: str
+    duration_ms: int
+    width: int
+    height: int
+    is_annotated: bool = False
+    project_id: Optional[str] = None
+
+
+class MediaUploadResponse(BaseModel):
+    uploaded: list[str]
+    failed: list[dict]
+    total_uploaded: int
+    total_failed: int
+
+
 class TextUploadResponse(BaseModel):
     uploaded: list[str]
     failed: list[dict]

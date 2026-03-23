@@ -62,7 +62,10 @@ export const NewProjectModal: React.FC<NewProjectModalProps> = ({ onClose, onCre
 
   const canNext = () => {
     if (step === 0) return name.trim().length > 0;
-    if (step === 2) return selectedTemplateId !== null;
+    if (step === 2) {
+      const templatesForType = templates.filter((t) => t.data_type === dataType);
+      return selectedTemplateId !== null || templatesForType.length === 0;
+    }
     return true;
   };
 
@@ -166,15 +169,20 @@ export const NewProjectModal: React.FC<NewProjectModalProps> = ({ onClose, onCre
               {[
                 { id: 'image', label: 'Image', icon: '🖼️', enabled: true },
                 { id: 'text', label: 'Text', icon: '📝', enabled: true },
-                { id: 'audio', label: 'Audio', icon: '🎵', enabled: false },
-                { id: 'video', label: 'Video', icon: '🎬', enabled: false },
+                { id: 'audio', label: 'Audio', icon: '🎵', enabled: true },
+                { id: 'video', label: 'Video', icon: '🎬', enabled: true },
               ].map((dt) => (
                 <div
                   key={dt.id}
                   onClick={() => {
                     if (!dt.enabled) return;
                     setDataType(dt.id);
-                    setAnnotationType(dt.id === 'text' ? 'text_span' : 'bbox');
+                    setAnnotationType(
+                      dt.id === 'text' ? 'text_span' :
+                      dt.id === 'audio' ? 'temporal_segment' :
+                      dt.id === 'video' ? 'temporal_segment' :
+                      'bbox'
+                    );
                     setSelectedTemplateId(null);
                     setLabels([]);
                   }}
@@ -189,9 +197,6 @@ export const NewProjectModal: React.FC<NewProjectModalProps> = ({ onClose, onCre
                   <span className="text-2xl">{dt.icon}</span>
                   <div>
                     <div className="text-sm font-medium text-th-text-primary">{dt.label}</div>
-                    {!dt.enabled && (
-                      <div className="text-xs text-th-text-secondary">Coming in a future phase</div>
-                    )}
                   </div>
                   {dt.id === dataType && (
                     <div className="ml-auto text-blue-600 text-sm font-medium">✓ Selected</div>

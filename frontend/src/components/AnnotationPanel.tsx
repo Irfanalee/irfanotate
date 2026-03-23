@@ -1,6 +1,8 @@
 import React from 'react';
 import { useAnnotationStore } from '../store/annotationStore';
 import { useProjectStore } from '../store/projectStore';
+import { formatMs } from '../utils/time';
+import type { TemporalSegmentGeometry, VideoFrameBoxGeometry } from '../types';
 
 export const AnnotationPanel: React.FC = () => {
   const { annotations, selectedIds, selectAnnotation, deleteAnnotation } = useAnnotationStore();
@@ -35,10 +37,19 @@ export const AnnotationPanel: React.FC = () => {
         {annotations.map((ann) => {
           const color = getLabelColor(ann.label);
           const isSelected = selectedIds.has(ann.id);
-          const geomLabel =
-            ann.geometry.type === 'polygon'
-              ? `polygon (${(ann.geometry.coordinates as unknown[]).length} pts)`
-              : ann.geometry.type;
+          const geomLabel = (() => {
+            const g = ann.geometry;
+            if (g.type === 'polygon') return `polygon (${(g.coordinates as unknown[]).length} pts)`;
+            if (g.type === 'temporal_segment') {
+              const tg = g as TemporalSegmentGeometry;
+              return `${formatMs(tg.start_ms)} – ${formatMs(tg.end_ms)}`;
+            }
+            if (g.type === 'video_frame_box') {
+              const vg = g as VideoFrameBoxGeometry;
+              return `frame @${formatMs(vg.frame_time_ms)}`;
+            }
+            return g.type;
+          })();
 
           return (
             <div

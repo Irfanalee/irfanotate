@@ -3,7 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from .database import init_db
 from .routers import images, ocr, invoice, claude, export_dataset
-from .routers import projects, annotations, schema_templates, text
+from .routers import projects, annotations, schema_templates, text, audio, video
 
 app = FastAPI(
     title="DataForge API",
@@ -28,6 +28,8 @@ app.include_router(projects.router)
 app.include_router(annotations.router)
 app.include_router(schema_templates.router)
 app.include_router(text.router)
+app.include_router(audio.router)
+app.include_router(video.router)
 
 
 @app.on_event("startup")

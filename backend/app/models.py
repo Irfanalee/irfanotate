@@ -21,6 +21,8 @@ class Project(Base):
 
     images = relationship("ImageRecord", back_populates="project")
     text_documents = relationship("TextRecord", back_populates="project")
+    audio_files = relationship("AudioRecord", back_populates="project")
+    video_files = relationship("VideoRecord", back_populates="project")
 
 
 class ImageRecord(Base):
@@ -52,3 +54,29 @@ class TextRecord(Base):
     project_id = Column(String, ForeignKey("projects.id"), nullable=True)
 
     project = relationship("Project", back_populates="text_documents")
+
+
+class AudioRecord(Base):
+    __tablename__ = "audio_files"
+    id = Column(Integer, primary_key=True, index=True)
+    filename = Column(String, unique=True, index=True)
+    duration_ms = Column(Integer, default=0)
+    is_annotated = Column(Boolean, default=False, server_default="0")
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    project_id = Column(String, ForeignKey("projects.id"), nullable=True)
+    project = relationship("Project", back_populates="audio_files")
+
+
+class VideoRecord(Base):
+    __tablename__ = "video_files"
+    id = Column(Integer, primary_key=True, index=True)
+    filename = Column(String, unique=True, index=True)
+    duration_ms = Column(Integer, default=0)
+    width = Column(Integer, default=0)
+    height = Column(Integer, default=0)
+    is_annotated = Column(Boolean, default=False, server_default="0")
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    project_id = Column(String, ForeignKey("projects.id"), nullable=True)
+    project = relationship("Project", back_populates="video_files")

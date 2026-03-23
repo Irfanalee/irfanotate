@@ -9,18 +9,86 @@ import { AnnotationPanel } from './components/AnnotationPanel';
 import { ProjectDashboard } from './components/ProjectDashboard';
 import { TextSidebar } from './components/TextSidebar';
 import { TextAnnotator } from './components/TextAnnotator';
+import { AudioSidebar } from './components/AudioSidebar';
+import { AudioAnnotator } from './components/AudioAnnotator';
+import { VideoSidebar } from './components/VideoSidebar';
+import { VideoAnnotator } from './components/VideoAnnotator';
 import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts';
 import { useImageStore } from './store/imageStore';
 import { useInvoiceStore } from './store/invoiceStore';
 import { useProjectStore } from './store/projectStore';
 import { useTextStore } from './store/textStore';
+import { useAudioStore } from './store/audioStore';
+import { useVideoStore } from './store/videoStore';
 import { fetchImages } from './api/images';
 import { fetchTextDocs } from './api/text';
+import { fetchAudioFiles } from './api/audio';
+import { fetchVideoFiles } from './api/video';
 import { fetchInvoiceAnnotation, saveInvoiceAnnotation } from './api/invoice';
 import { getOcrCache, runOcr } from './api/ocr';
 import type { Project } from './types';
 
 type AppView = 'dashboard' | 'workspace';
+
+function AudioWorkspaceView() {
+  const { setFiles, setIsLoading, setError } = useAudioStore();
+  const { currentProject } = useProjectStore();
+
+  useEffect(() => {
+    const load = async () => {
+      setIsLoading(true);
+      try {
+        const files = await fetchAudioFiles(currentProject?.id);
+        setFiles(files);
+      } catch (err) {
+        console.error('Failed to load audio files:', err);
+        setError('Failed to load audio files');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    load();
+  }, [currentProject?.id, setFiles, setIsLoading, setError]);
+
+  return (
+    <Layout>
+      <AudioSidebar />
+      <div className="flex-1 flex flex-col overflow-hidden">
+        <AudioAnnotator />
+      </div>
+    </Layout>
+  );
+}
+
+function VideoWorkspaceView() {
+  const { setFiles, setIsLoading, setError } = useVideoStore();
+  const { currentProject } = useProjectStore();
+
+  useEffect(() => {
+    const load = async () => {
+      setIsLoading(true);
+      try {
+        const files = await fetchVideoFiles(currentProject?.id);
+        setFiles(files);
+      } catch (err) {
+        console.error('Failed to load video files:', err);
+        setError('Failed to load video files');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    load();
+  }, [currentProject?.id, setFiles, setIsLoading, setError]);
+
+  return (
+    <Layout>
+      <VideoSidebar />
+      <div className="flex-1 flex flex-col overflow-hidden">
+        <VideoAnnotator />
+      </div>
+    </Layout>
+  );
+}
 
 function TextWorkspaceView() {
   const { setDocs, setIsLoading, setError } = useTextStore();
@@ -207,7 +275,10 @@ function App() {
         </span>
       </div>
       <div className="flex-1 h-full overflow-hidden">
-        {currentProject?.data_type === 'text' ? <TextWorkspaceView /> : <WorkspaceView />}
+        {currentProject?.data_type === 'text' ? <TextWorkspaceView /> :
+         currentProject?.data_type === 'audio' ? <AudioWorkspaceView /> :
+         currentProject?.data_type === 'video' ? <VideoWorkspaceView /> :
+         <WorkspaceView />}
       </div>
     </div>
   );

@@ -5,7 +5,7 @@ import json
 from ..config import settings
 from ..schemas import AnnotationDocumentV2, SaveAnnotationsRequest
 from ..database import SessionLocal
-from ..models import ImageRecord
+from ..models import ImageRecord, TextRecord, AudioRecord, VideoRecord
 
 router = APIRouter(prefix="/api/annotations", tags=["annotations"])
 
@@ -87,17 +87,17 @@ async def save_annotation(filename: str, body: SaveAnnotationsRequest):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to save annotation: {e}")
 
-    # Mark image as annotated in DB
+    # Mark record as annotated in DB (any media type)
     db = SessionLocal()
     try:
-        image_record = db.query(ImageRecord).filter(
-            ImageRecord.filename == filename
-        ).first()
-        if image_record:
-            image_record.is_annotated = True
-            if body.project_id and not image_record.project_id:
-                image_record.project_id = body.project_id
-            db.commit()
+        for ModelClass in [ImageRecord, TextRecord, AudioRecord, VideoRecord]:
+            record = db.query(ModelClass).filter(ModelClass.filename == filename).first()
+            if record:
+                record.is_annotated = True
+                if body.project_id and not record.project_id:
+                    record.project_id = body.project_id
+                db.commit()
+                break
     finally:
         db.close()
 
@@ -115,12 +115,12 @@ async def delete_annotation(filename: str):
 
     db = SessionLocal()
     try:
-        image_record = db.query(ImageRecord).filter(
-            ImageRecord.filename == filename
-        ).first()
-        if image_record:
-            image_record.is_annotated = False
-            db.commit()
+        for ModelClass in [ImageRecord, TextRecord, AudioRecord, VideoRecord]:
+            record = db.query(ModelClass).filter(ModelClass.filename == filename).first()
+            if record:
+                record.is_annotated = False
+                db.commit()
+                break
     finally:
         db.close()
 

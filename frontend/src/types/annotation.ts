@@ -1,5 +1,5 @@
 // 'draw' kept as a transition alias for backward compatibility
-export type ToolMode = 'select' | 'draw' | 'bbox' | 'polygon' | 'text_span';
+export type ToolMode = 'select' | 'draw' | 'bbox' | 'polygon' | 'text_span' | 'temporal' | 'video_bbox';
 
 export interface BboxGeometry {
   type: 'bbox';
@@ -23,7 +23,21 @@ export interface TextSpanGeometry {
   text: string;
 }
 
-export type Geometry = BboxGeometry | PolygonGeometry | ClassificationGeometry | TextSpanGeometry;
+export interface TemporalSegmentGeometry {
+  type: 'temporal_segment';
+  start_ms: number;
+  end_ms: number;
+}
+
+export interface VideoFrameBoxGeometry {
+  type: 'video_frame_box';
+  coordinates: [number, number, number, number]; // [x1, y1, x2, y2] normalized 0–1
+  frame_time_ms: number;
+}
+
+export type Geometry =
+  | BboxGeometry | PolygonGeometry | ClassificationGeometry
+  | TextSpanGeometry | TemporalSegmentGeometry | VideoFrameBoxGeometry;
 
 export interface Annotation {
   id: string;

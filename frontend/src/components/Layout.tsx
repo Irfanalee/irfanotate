@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { useImageStore } from '../store/imageStore';
 import { useTextStore } from '../store/textStore';
+import { useAudioStore } from '../store/audioStore';
+import { useVideoStore } from '../store/videoStore';
 import { useProjectStore } from '../store/projectStore';
 import { useCanvasStore } from '../store/canvasStore';
 import { useInvoiceStore } from '../store/invoiceStore';
@@ -15,6 +17,8 @@ interface LayoutProps {
 export const Layout: React.FC<LayoutProps> = ({ children }) => {
   const { images, currentIndex } = useImageStore();
   const { docs } = useTextStore();
+  const { files: audioFiles, currentIndex: audioIndex } = useAudioStore();
+  const { files: videoFiles, currentIndex: videoIndex } = useVideoStore();
   const { currentProject } = useProjectStore();
   const { isDirty } = useInvoiceStore();
   const { tool, transform } = useCanvasStore();
@@ -24,12 +28,22 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
 
   const currentImage = images[currentIndex];
 
-  const isTextProject = currentProject?.data_type === 'text';
+  const dataType = currentProject?.data_type;
 
-  const statsNode = isTextProject ? (
+  const statsNode = dataType === 'text' ? (
     <>
       <span>{docs.length} documents</span>
       <span>{docs.filter((d) => d.is_annotated).length} annotated</span>
+    </>
+  ) : dataType === 'audio' ? (
+    <>
+      <span>{audioFiles.length} files</span>
+      <span>{audioFiles.filter((f) => f.is_annotated).length} annotated</span>
+    </>
+  ) : dataType === 'video' ? (
+    <>
+      <span>{videoFiles.length} files</span>
+      <span>{videoFiles.filter((f) => f.is_annotated).length} annotated</span>
     </>
   ) : (
     <>
@@ -41,6 +55,8 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
   const dataTypeBadgeColor: Record<string, string> = {
     image: 'bg-blue-700 text-blue-100',
     text: 'bg-emerald-700 text-emerald-100',
+    audio: 'bg-purple-700 text-purple-100',
+    video: 'bg-rose-700 text-rose-100',
   };
   const badgeClass = dataTypeBadgeColor[currentProject?.data_type ?? ''] ?? 'bg-gray-600 text-gray-100';
 
@@ -80,18 +96,26 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
       <main className="flex-1 flex overflow-hidden">{children}</main>
 
       <footer className="h-6 bg-th-bg-footer border-t border-th-border flex items-center px-4 text-xs text-th-text-secondary gap-4">
-        <span className="font-medium">{currentImage?.filename || 'No image selected'}</span>
-        {currentImage && (
-          <span>
-            {currentImage.width} × {currentImage.height}
-          </span>
+        {dataType === 'audio' ? (
+          <span className="font-medium">{audioFiles[audioIndex]?.filename ?? 'No file selected'}</span>
+        ) : dataType === 'video' ? (
+          <span className="font-medium">{videoFiles[videoIndex]?.filename ?? 'No file selected'}</span>
+        ) : (
+          <>
+            <span className="font-medium">{currentImage?.filename || 'No image selected'}</span>
+            {currentImage && (
+              <span>
+                {currentImage.width} × {currentImage.height}
+              </span>
+            )}
+            <span className="capitalize">Tool: {tool}</span>
+            <span>Zoom: {Math.round(transform.scale * 100)}%</span>
+            {isDirty && <span className="text-orange-500">Unsaved changes</span>}
+          </>
         )}
-        <span className="capitalize">Tool: {tool}</span>
-        <span>Zoom: {Math.round(transform.scale * 100)}%</span>
-        {isDirty && <span className="text-orange-500">Unsaved changes</span>}
         <div className="flex-1" />
         <span className="opacity-60">
-          D: Draw | P: Polygon | S: Select | Del: Delete | G: Group | Arrows: Navigate | Ctrl+S: Save
+          Ctrl+S: Save | Space: Play/Pause | Del: Delete
         </span>
       </footer>
     </div>
