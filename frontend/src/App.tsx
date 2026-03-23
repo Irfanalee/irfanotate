@@ -194,15 +194,15 @@ function App() {
 
   return (
     <div className="flex flex-col h-screen">
-      <div className="bg-white border-b border-gray-200 px-4 py-2 flex items-center gap-3 flex-shrink-0">
+      <div className="bg-th-bg-card border-b border-th-border px-4 py-2 flex items-center gap-3 flex-shrink-0">
         <button
           onClick={handleBackToDashboard}
           className="text-sm text-blue-600 hover:text-blue-800 font-medium flex items-center gap-1"
         >
           ← Projects
         </button>
-        <div className="h-4 w-px bg-gray-300" />
-        <span className="text-sm text-gray-700 font-medium">
+        <div className="h-4 w-px bg-th-border-strong" />
+        <span className="text-sm text-th-text-primary font-medium">
           {currentProject?.name ?? 'Workspace'}
         </span>
       </div>

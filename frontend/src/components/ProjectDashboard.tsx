@@ -22,12 +22,12 @@ export const ProjectDashboard: React.FC<ProjectDashboardProps> = ({ onOpenProjec
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-th-bg-page">
       {/* Header */}
-      <div className="bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between">
+      <div className="bg-th-bg-card border-b border-th-border px-6 py-4 flex items-center justify-between">
         <div>
-          <h1 className="text-xl font-bold text-gray-900">DataForge</h1>
-          <p className="text-sm text-gray-500">Multi-modal annotation platform</p>
+          <h1 className="text-xl font-bold text-th-text-primary">DataForge</h1>
+          <p className="text-sm text-th-text-secondary">Multi-modal annotation platform</p>
         </div>
         <button
           onClick={() => setShowNewModal(true)}
@@ -40,14 +40,14 @@ export const ProjectDashboard: React.FC<ProjectDashboardProps> = ({ onOpenProjec
       {/* Content */}
       <div className="px-6 py-6">
         {isLoading ? (
-          <div className="flex items-center justify-center py-20 text-gray-400">
+          <div className="flex items-center justify-center py-20 text-th-text-secondary">
             Loading projects…
           </div>
         ) : projects.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20 text-center">
             <div className="text-5xl mb-4">📂</div>
-            <h2 className="text-lg font-semibold text-gray-700 mb-2">No projects yet</h2>
-            <p className="text-sm text-gray-500 mb-6 max-w-xs">
+            <h2 className="text-lg font-semibold text-th-text-primary mb-2">No projects yet</h2>
+            <p className="text-sm text-th-text-secondary mb-6 max-w-xs">
               Create your first annotation project to get started.
             </p>
             <button
@@ -63,28 +63,28 @@ export const ProjectDashboard: React.FC<ProjectDashboardProps> = ({ onOpenProjec
               <div
                 key={project.id}
                 onClick={() => onOpenProject(project)}
-                className="bg-white border border-gray-200 rounded-xl p-4 cursor-pointer hover:border-blue-400 hover:shadow-md transition-all group"
+                className="bg-th-bg-card border border-th-border rounded-xl p-4 cursor-pointer hover:border-blue-400 hover:shadow-md transition-all group"
               >
                 <div className="flex items-start justify-between mb-3">
                   <div className="flex items-center gap-2">
                     <span className="text-xl">{project.data_type === 'image' ? '🖼️' : '📄'}</span>
-                    <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">
+                    <span className="text-xs font-medium text-th-text-secondary uppercase tracking-wide">
                       {project.annotation_type}
                     </span>
                   </div>
                   <button
                     onClick={(e) => handleDelete(e, project)}
-                    className="opacity-0 group-hover:opacity-100 text-gray-400 hover:text-red-500 transition-all text-lg leading-none"
+                    className="opacity-0 group-hover:opacity-100 text-th-text-secondary hover:text-red-500 transition-all text-lg leading-none"
                     title="Delete project"
                   >
                     ×
                   </button>
                 </div>
-                <h3 className="font-semibold text-gray-900 mb-1 truncate">{project.name}</h3>
+                <h3 className="font-semibold text-th-text-primary mb-1 truncate">{project.name}</h3>
                 {project.description && (
-                  <p className="text-xs text-gray-500 mb-3 line-clamp-2">{project.description}</p>
+                  <p className="text-xs text-th-text-secondary mb-3 line-clamp-2">{project.description}</p>
                 )}
-                <div className="flex items-center gap-3 text-xs text-gray-500 mt-auto pt-2 border-t border-gray-100">
+                <div className="flex items-center gap-3 text-xs text-th-text-secondary mt-auto pt-2 border-t border-th-border">
                   <span>{project.image_count} images</span>
                   <span>·</span>
                   <span>{project.annotated_count} annotated</span>

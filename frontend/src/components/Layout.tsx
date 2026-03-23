@@ -4,7 +4,9 @@ import { useTextStore } from '../store/textStore';
 import { useProjectStore } from '../store/projectStore';
 import { useCanvasStore } from '../store/canvasStore';
 import { useInvoiceStore } from '../store/invoiceStore';
+import { useThemeStore } from '../store/themeStore';
 import { HelpModal } from './HelpModal';
+import { ThemeSelector } from './ThemeSelector';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -16,6 +18,8 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
   const { currentProject } = useProjectStore();
   const { isDirty } = useInvoiceStore();
   const { tool, transform } = useCanvasStore();
+  // Import store to trigger initialization on mount
+  useThemeStore();
   const [helpOpen, setHelpOpen] = useState(false);
 
   const currentImage = images[currentIndex];
@@ -41,15 +45,15 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
   const badgeClass = dataTypeBadgeColor[currentProject?.data_type ?? ''] ?? 'bg-gray-600 text-gray-100';
 
   return (
-    <div className="h-full flex flex-col bg-gray-50">
-      <header className="h-10 bg-gray-800 text-white flex items-center px-4 justify-between">
+    <div className="h-full flex flex-col bg-th-bg-page">
+      <header className="h-10 bg-th-bg-header text-th-text-header flex items-center px-4 justify-between">
         {/* Left: brand + project name */}
         <div className="flex items-center gap-3">
           <h1 className="text-sm font-bold tracking-tight">DataForge</h1>
           {currentProject && (
             <>
-              <span className="text-gray-500 text-sm">·</span>
-              <span className="text-sm font-medium text-gray-100">{currentProject.name}</span>
+              <span className="opacity-40 text-sm">·</span>
+              <span className="text-sm font-medium">{currentProject.name}</span>
               <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded uppercase tracking-wide ${badgeClass}`}>
                 {currentProject.data_type}
               </span>
@@ -57,12 +61,13 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
           )}
         </div>
 
-        {/* Right: stats + help */}
-        <div className="flex items-center gap-4 text-xs text-gray-300">
+        {/* Right: stats + theme selector + help */}
+        <div className="flex items-center gap-3 text-xs text-th-text-header opacity-80">
           {statsNode}
+          <ThemeSelector />
           <button
             onClick={() => setHelpOpen(true)}
-            className="ml-2 w-5 h-5 rounded-full border border-gray-400 text-gray-300 hover:bg-gray-600 hover:text-white flex items-center justify-center font-bold text-xs"
+            className="w-5 h-5 rounded-full border border-white/30 text-th-text-header hover:bg-white/10 flex items-center justify-center font-bold text-xs opacity-80 hover:opacity-100"
             title="Help"
           >
             ?
@@ -74,7 +79,7 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
 
       <main className="flex-1 flex overflow-hidden">{children}</main>
 
-      <footer className="h-6 bg-gray-200 border-t border-gray-300 flex items-center px-4 text-xs text-gray-600 gap-4">
+      <footer className="h-6 bg-th-bg-footer border-t border-th-border flex items-center px-4 text-xs text-th-text-secondary gap-4">
         <span className="font-medium">{currentImage?.filename || 'No image selected'}</span>
         {currentImage && (
           <span>
@@ -83,9 +88,9 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
         )}
         <span className="capitalize">Tool: {tool}</span>
         <span>Zoom: {Math.round(transform.scale * 100)}%</span>
-        {isDirty && <span className="text-orange-600">Unsaved changes</span>}
+        {isDirty && <span className="text-orange-500">Unsaved changes</span>}
         <div className="flex-1" />
-        <span className="text-gray-400">
+        <span className="opacity-60">
           D: Draw | P: Polygon | S: Select | Del: Delete | G: Group | Arrows: Navigate | Ctrl+S: Save
         </span>
       </footer>

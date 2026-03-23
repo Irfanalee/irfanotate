@@ -65,7 +65,7 @@ export const ImageSidebar: React.FC = () => {
   const annotatedCount = images.filter((img) => img.isAnnotated).length;
 
   const UploadButton = () => (
-    <div className="p-2 border-b border-gray-300">
+    <div className="p-2 border-b border-th-border">
       <input
         ref={fileInputRef}
         type="file"
@@ -92,17 +92,17 @@ export const ImageSidebar: React.FC = () => {
         )}
       </button>
       {uploadMessage && (
-        <p className="mt-1 text-xs text-center text-gray-600">{uploadMessage}</p>
+        <p className="mt-1 text-xs text-center text-th-text-secondary">{uploadMessage}</p>
       )}
     </div>
   );
 
   if (isLoading) {
     return (
-      <div className="w-48 bg-gray-100 border-r border-gray-300 flex flex-col">
+      <div className="w-48 bg-th-bg-sidebar border-r border-th-border flex flex-col">
         <UploadButton />
         <div className="flex-1 flex items-center justify-center">
-          <div className="text-gray-500">Loading...</div>
+          <div className="text-th-text-secondary">Loading...</div>
         </div>
       </div>
     );
@@ -110,10 +110,10 @@ export const ImageSidebar: React.FC = () => {
 
   if (images.length === 0) {
     return (
-      <div className="w-48 bg-gray-100 border-r border-gray-300 flex flex-col">
+      <div className="w-48 bg-th-bg-sidebar border-r border-th-border flex flex-col">
         <UploadButton />
         <div className="flex-1 flex items-center justify-center p-4">
-          <div className="text-gray-500 text-center text-sm">
+          <div className="text-th-text-secondary text-center text-sm">
             <p>No images found</p>
             <p className="mt-2 text-xs">Upload invoice images to get started</p>
           </div>
@@ -123,10 +123,10 @@ export const ImageSidebar: React.FC = () => {
   }
 
   return (
-    <div className="w-48 bg-gray-100 border-r border-gray-300 flex flex-col">
+    <div className="w-48 bg-th-bg-sidebar border-r border-th-border flex flex-col">
       <UploadButton />
-      <div className="p-2 border-b border-gray-300 bg-gray-200">
-        <h2 className="text-sm font-semibold text-gray-700">Images ({images.length})</h2>
+      <div className="p-2 border-b border-th-border bg-th-bg-footer">
+        <h2 className="text-sm font-semibold text-th-text-primary">Images ({images.length})</h2>
         <p className="text-xs text-green-700 mt-0.5">
           {annotatedCount} / {images.length} annotated
         </p>
@@ -149,12 +149,12 @@ export const ImageSidebar: React.FC = () => {
               ? 'text-yellow-500 animate-pulse'
               : img.ocrStatus === 'error'
               ? 'text-red-500'
-              : 'text-gray-400';
+              : 'text-th-text-secondary';
 
           return (
             <div
               key={img.filename}
-              className={`p-2 cursor-pointer border-b border-gray-200 hover:bg-gray-200 ${
+              className={`p-2 cursor-pointer border-b border-th-border hover:bg-th-bg-hover ${
                 isSelected
                   ? img.isAnnotated
                     ? 'bg-green-100 border-l-4 border-l-green-500'
@@ -169,7 +169,7 @@ export const ImageSidebar: React.FC = () => {
                 <img
                   src={getImageUrl(img.filename)}
                   alt={img.filename}
-                  className="w-full h-24 object-cover rounded bg-gray-300"
+                  className="w-full h-24 object-cover rounded bg-th-bg-footer"
                   loading="lazy"
                 />
                 {/* Remove button */}
@@ -197,18 +197,18 @@ export const ImageSidebar: React.FC = () => {
                 <span className={`text-xs font-bold ${ocrColor}`} title={`OCR: ${img.ocrStatus}`}>
                   {ocrDot}
                 </span>
-                <p className="text-xs text-gray-600 truncate flex-1" title={img.filename}>
+                <p className="text-xs text-th-text-secondary truncate flex-1" title={img.filename}>
                   {img.filename}
                 </p>
               </div>
-              <p className="text-xs text-gray-400">
+              <p className="text-xs text-th-text-secondary opacity-70">
                 {img.width} × {img.height}
               </p>
             </div>
           );
         })}
       </div>
-      <div className="p-2 border-t border-gray-300">
+      <div className="p-2 border-t border-th-border">
         <button
           onClick={handleRemoveAllImages}
           className="w-full px-3 py-1.5 text-sm bg-red-500 text-white rounded hover:bg-red-600"

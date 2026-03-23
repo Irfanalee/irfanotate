@@ -88,21 +88,21 @@ export const AutoAnnotateModal: React.FC<AutoAnnotateModalProps> = ({ onClose, a
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-      <div className="bg-white rounded-lg shadow-xl w-96 overflow-hidden">
+      <div className="bg-th-bg-card rounded-lg shadow-xl w-96 overflow-hidden">
         {/* Header */}
-        <div className="px-5 py-4 border-b border-gray-200 flex items-center gap-2">
+        <div className="px-5 py-4 border-b border-th-border flex items-center gap-2">
           <span className="text-indigo-600">✦</span>
-          <h2 className="text-sm font-semibold text-gray-800">Auto-Annotate Settings</h2>
+          <h2 className="text-sm font-semibold text-th-text-primary">Auto-Annotate Settings</h2>
         </div>
 
         {/* Body */}
         <div className="px-5 py-4 space-y-4">
           {/* Provider */}
           <div className="flex items-center gap-3">
-            <label className="text-xs font-medium text-gray-600 w-28">Provider</label>
+            <label className="text-xs font-medium text-th-text-secondary w-28">Provider</label>
             <div className="flex-1 relative">
               <select
-                className="w-full text-sm border border-gray-300 rounded px-2 py-1.5 pr-7 appearance-none bg-white"
+                className="w-full text-sm border border-th-border rounded px-2 py-1.5 pr-7 appearance-none bg-th-bg-card text-th-text-primary"
                 value={provider}
                 onChange={(e) => handleProviderChange(e.target.value as Provider)}
                 disabled={phase === 'running'}
@@ -113,16 +113,16 @@ export const AutoAnnotateModal: React.FC<AutoAnnotateModalProps> = ({ onClose, a
                   </option>
                 ))}
               </select>
-              <span className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 text-xs">▾</span>
+              <span className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-th-text-secondary text-xs">▾</span>
             </div>
           </div>
 
           {/* Model */}
           <div className="flex items-center gap-3">
-            <label className="text-xs font-medium text-gray-600 w-28">Model</label>
+            <label className="text-xs font-medium text-th-text-secondary w-28">Model</label>
             <div className="flex-1 relative">
               <select
-                className="w-full text-sm border border-gray-300 rounded px-2 py-1.5 pr-7 appearance-none bg-white"
+                className="w-full text-sm border border-th-border rounded px-2 py-1.5 pr-7 appearance-none bg-th-bg-card text-th-text-primary"
                 value={model}
                 onChange={(e) => setModel(e.target.value)}
                 disabled={phase === 'running'}
@@ -131,13 +131,13 @@ export const AutoAnnotateModal: React.FC<AutoAnnotateModalProps> = ({ onClose, a
                   <option key={m} value={m}>{m}</option>
                 ))}
               </select>
-              <span className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 text-xs">▾</span>
+              <span className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-th-text-secondary text-xs">▾</span>
             </div>
           </div>
 
           {/* Max examples */}
           <div className="flex items-center gap-3">
-            <label className="text-xs font-medium text-gray-600 w-28">Max examples</label>
+            <label className="text-xs font-medium text-th-text-secondary w-28">Max examples</label>
             <input
               type="number"
               min={1}
@@ -145,15 +145,15 @@ export const AutoAnnotateModal: React.FC<AutoAnnotateModalProps> = ({ onClose, a
               value={maxExamples}
               onChange={(e) => setMaxExamples(Math.max(1, Math.min(10, Number(e.target.value))))}
               disabled={phase === 'running'}
-              className="w-20 text-sm border border-gray-300 rounded px-2 py-1.5 text-center"
+              className="w-20 text-sm border border-th-border rounded px-2 py-1.5 text-center bg-th-bg-card text-th-text-primary"
             />
-            <span className="text-xs text-gray-400">(1–10)</span>
+            <span className="text-xs text-th-text-secondary">(1–10)</span>
           </div>
 
           {/* Overwrite */}
           <div className="flex items-center gap-3">
-            <label className="text-xs font-medium text-gray-600 w-28" />
-            <label className="flex items-center gap-2 text-sm text-gray-700 cursor-pointer select-none">
+            <label className="text-xs font-medium text-th-text-secondary w-28" />
+            <label className="flex items-center gap-2 text-sm text-th-text-primary cursor-pointer select-none">
               <input
                 type="checkbox"
                 checked={overwrite}
@@ -173,7 +173,7 @@ export const AutoAnnotateModal: React.FC<AutoAnnotateModalProps> = ({ onClose, a
                 <span className="animate-spin inline-block text-indigo-400">⟳</span>
               </div>
               {progress.filename && (
-                <p className="text-[11px] text-gray-400 truncate">{progress.filename}</p>
+                <p className="text-[11px] text-th-text-secondary truncate">{progress.filename}</p>
               )}
               <div className="w-full h-1.5 bg-indigo-100 rounded-full overflow-hidden">
                 <div
@@ -205,8 +205,8 @@ export const AutoAnnotateModal: React.FC<AutoAnnotateModalProps> = ({ onClose, a
         </div>
 
         {/* Footer */}
-        <div className="px-5 py-3 border-t border-gray-200 flex items-center justify-between">
-          <p className="text-[11px] text-gray-400">
+        <div className="px-5 py-3 border-t border-th-border flex items-center justify-between">
+          <p className="text-[11px] text-th-text-secondary">
             {annotatedCount > 0
               ? `Using ${annotatedCount} saved annotation${annotatedCount !== 1 ? 's' : ''} as examples`
               : 'No annotations yet — annotate 1+ manually first'}
@@ -215,7 +215,7 @@ export const AutoAnnotateModal: React.FC<AutoAnnotateModalProps> = ({ onClose, a
             {phase !== 'running' && (
               <button
                 onClick={onClose}
-                className="px-3 py-1.5 text-xs text-gray-600 hover:bg-gray-100 rounded"
+                className="px-3 py-1.5 text-xs text-th-text-secondary hover:bg-th-bg-hover rounded"
               >
                 {phase === 'done' ? 'Close' : 'Cancel'}
               </button>
@@ -227,7 +227,7 @@ export const AutoAnnotateModal: React.FC<AutoAnnotateModalProps> = ({ onClose, a
                 className={`px-3 py-1.5 text-xs rounded flex items-center gap-1.5 ${
                   annotatedCount > 0
                     ? 'bg-indigo-600 text-white hover:bg-indigo-700'
-                    : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                    : 'bg-th-bg-toolbar text-th-text-secondary cursor-not-allowed'
                 }`}
               >
                 <span>▶</span> Start

@@ -54,14 +54,14 @@ export const InvoicePanel: React.FC = () => {
   const savePayload = buildSavePayload();
 
   return (
-    <div className="w-72 flex flex-col border-l border-gray-200 bg-white">
+    <div className="w-72 flex flex-col border-l border-th-border bg-th-bg-panel">
       {/* Tab bar */}
-      <div className="flex border-b border-gray-200">
+      <div className="flex border-b border-th-border">
         <button
           className={`flex-1 py-2 text-sm font-medium transition-colors ${
             activeTab === 'line_items'
               ? 'text-blue-600 border-b-2 border-blue-600'
-              : 'text-gray-500 hover:text-gray-700'
+              : 'text-th-text-secondary hover:text-th-text-primary'
           }`}
           onClick={() => setActiveTab('line_items')}
         >
@@ -71,7 +71,7 @@ export const InvoicePanel: React.FC = () => {
           className={`flex-1 py-2 text-sm font-medium transition-colors ${
             activeTab === 'headers'
               ? 'text-blue-600 border-b-2 border-blue-600'
-              : 'text-gray-500 hover:text-gray-700'
+              : 'text-th-text-secondary hover:text-th-text-primary'
           }`}
           onClick={() => setActiveTab('headers')}
         >
@@ -98,13 +98,13 @@ export const InvoicePanel: React.FC = () => {
             </button>
 
             {lineItems.length === 0 && (
-              <p className="text-xs text-gray-400 text-center py-4">No line items yet</p>
+              <p className="text-xs text-th-text-secondary text-center py-4">No line items yet</p>
             )}
 
             {lineItems.map((li) => (
-              <div key={li.line_item_id} className="border border-gray-200 rounded p-2">
+              <div key={li.line_item_id} className="border border-th-border rounded p-2">
                 <div className="flex items-center justify-between mb-1">
-                  <span className="text-xs font-semibold text-gray-600">
+                  <span className="text-xs font-semibold text-th-text-secondary">
                     Line Item #{li.line_item_id}
                   </span>
                   <button
@@ -129,7 +129,7 @@ export const InvoicePanel: React.FC = () => {
                         >
                           {field.replace(/_/g, ' ')}
                         </span>
-                        <span className="text-[11px] text-gray-700 truncate">{val.text}</span>
+                        <span className="text-[11px] text-th-text-primary truncate">{val.text}</span>
                       </div>
                     );
                   })}
@@ -144,7 +144,7 @@ export const InvoicePanel: React.FC = () => {
             {HEADER_FIELDS.map((field) => {
               const val = headerFields[field as HeaderFieldType];
               return (
-                <div key={field} className="flex items-start gap-2 py-1 border-b border-gray-100 last:border-0">
+                <div key={field} className="flex items-start gap-2 py-1 border-b border-th-border last:border-0">
                   <span
                     className="text-[10px] font-medium px-1.5 py-0.5 rounded flex-shrink-0"
                     style={{
@@ -154,8 +154,8 @@ export const InvoicePanel: React.FC = () => {
                   >
                     {field.replace(/_/g, ' ')}
                   </span>
-                  <span className="text-[11px] text-gray-700 truncate">
-                    {val ? val.text : <span className="text-gray-300 italic">—</span>}
+                  <span className="text-[11px] text-th-text-primary truncate">
+                    {val ? val.text : <span className="text-th-text-secondary italic">—</span>}
                   </span>
                 </div>
               );
@@ -165,30 +165,30 @@ export const InvoicePanel: React.FC = () => {
       </div>
 
       {/* JSON preview */}
-      <div className="border-t border-gray-200">
+      <div className="border-t border-th-border">
         <button
           onClick={() => setJsonOpen((o) => !o)}
-          className="w-full text-left px-3 py-1.5 text-xs text-gray-500 hover:bg-gray-50 flex items-center justify-between"
+          className="w-full text-left px-3 py-1.5 text-xs text-th-text-secondary hover:bg-th-bg-hover flex items-center justify-between"
         >
           <span>JSON Preview</span>
           <span>{jsonOpen ? '▲' : '▼'}</span>
         </button>
         {jsonOpen && (
-          <pre className="text-[10px] bg-gray-50 p-2 max-h-48 overflow-auto text-gray-600 leading-relaxed">
+          <pre className="text-[10px] bg-th-bg-toolbar p-2 max-h-48 overflow-auto text-th-text-secondary leading-relaxed">
             {JSON.stringify(savePayload, null, 2)}
           </pre>
         )}
       </div>
 
       {/* Save button */}
-      <div className="p-2 border-t border-gray-200">
+      <div className="p-2 border-t border-th-border">
         <button
           onClick={handleSave}
           disabled={!currentImage || isSaving}
           className={`w-full py-2 rounded text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
             isDirty
               ? 'bg-blue-600 text-white hover:bg-blue-700'
-              : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+              : 'bg-th-bg-toolbar text-th-text-secondary hover:bg-th-bg-hover'
           }`}
         >
           {isSaving ? 'Saving…' : isDirty ? 'Save *' : 'Saved'}

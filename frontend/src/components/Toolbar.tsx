@@ -53,7 +53,6 @@ export const Toolbar: React.FC = () => {
     try {
       const stats = await exportJsonl();
       setExportMsg(`JSONL ready — ${stats.total_documents} docs`);
-      // Trigger download
       window.location.href = getJsonlDownloadUrl();
       setTimeout(() => setExportMsg(null), 5000);
     } catch (err: unknown) {
@@ -92,13 +91,13 @@ export const Toolbar: React.FC = () => {
   const canAutoAnnotate = annotatedCount > 0;
 
   return (
-    <div className="h-12 bg-gray-100 border-b border-gray-300 flex items-center px-4 gap-3">
+    <div className="h-12 bg-th-bg-toolbar border-b border-th-border flex items-center px-4 gap-3">
       {/* Tool Selector */}
-      <div className="flex items-center gap-0 bg-white rounded border border-gray-300">
+      <div className="flex items-center gap-0 bg-th-bg-card rounded border border-th-border">
         <button
           onClick={() => setTool('select')}
           className={`px-3 py-1.5 text-sm rounded-l ${
-            tool === 'select' ? 'bg-gray-800 text-white' : 'text-gray-700 hover:bg-gray-100'
+            tool === 'select' ? 'bg-gray-800 text-white' : 'text-th-text-primary hover:bg-th-bg-hover'
           }`}
           title="Select tool (S)"
         >
@@ -106,8 +105,8 @@ export const Toolbar: React.FC = () => {
         </button>
         <button
           onClick={() => setTool('draw')}
-          className={`px-3 py-1.5 text-sm border-x border-gray-300 ${
-            tool === 'draw' ? 'bg-gray-800 text-white' : 'text-gray-700 hover:bg-gray-100'
+          className={`px-3 py-1.5 text-sm border-x border-th-border ${
+            tool === 'draw' ? 'bg-gray-800 text-white' : 'text-th-text-primary hover:bg-th-bg-hover'
           }`}
           title="Draw box tool (D)"
         >
@@ -116,7 +115,7 @@ export const Toolbar: React.FC = () => {
         <button
           onClick={() => setTool('polygon')}
           className={`px-3 py-1.5 text-sm rounded-r ${
-            tool === 'polygon' ? 'bg-gray-800 text-white' : 'text-gray-700 hover:bg-gray-100'
+            tool === 'polygon' ? 'bg-gray-800 text-white' : 'text-th-text-primary hover:bg-th-bg-hover'
           }`}
           title="Draw polygon tool (P)"
         >
@@ -126,9 +125,9 @@ export const Toolbar: React.FC = () => {
 
       {/* Zoom */}
       <div className="flex items-center gap-1">
-        <button onClick={zoomOut}   className="px-2 py-1 text-sm bg-white border border-gray-300 rounded hover:bg-gray-100">-</button>
-        <button onClick={resetZoom} className="px-2 py-1 text-sm bg-white border border-gray-300 rounded hover:bg-gray-100 min-w-[56px] text-center">{zoomPercent}%</button>
-        <button onClick={zoomIn}    className="px-2 py-1 text-sm bg-white border border-gray-300 rounded hover:bg-gray-100">+</button>
+        <button onClick={zoomOut}   className="px-2 py-1 text-sm bg-th-bg-card border border-th-border rounded hover:bg-th-bg-hover text-th-text-primary">-</button>
+        <button onClick={resetZoom} className="px-2 py-1 text-sm bg-th-bg-card border border-th-border rounded hover:bg-th-bg-hover min-w-[56px] text-center text-th-text-primary">{zoomPercent}%</button>
+        <button onClick={zoomIn}    className="px-2 py-1 text-sm bg-th-bg-card border border-th-border rounded hover:bg-th-bg-hover text-th-text-primary">+</button>
       </div>
 
       {/* Navigation */}
@@ -136,17 +135,17 @@ export const Toolbar: React.FC = () => {
         <button
           onClick={prevImage}
           disabled={currentIndex === 0}
-          className="px-2 py-1 text-sm bg-white border border-gray-300 rounded hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
+          className="px-2 py-1 text-sm bg-th-bg-card border border-th-border rounded hover:bg-th-bg-hover disabled:opacity-50 disabled:cursor-not-allowed text-th-text-primary"
         >
           &lt; Prev
         </button>
-        <span className="text-sm text-gray-600 min-w-[56px] text-center">
+        <span className="text-sm text-th-text-secondary min-w-[56px] text-center">
           {images.length > 0 ? `${currentIndex + 1} / ${images.length}` : '0 / 0'}
         </span>
         <button
           onClick={nextImage}
           disabled={currentIndex >= images.length - 1}
-          className="px-2 py-1 text-sm bg-white border border-gray-300 rounded hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
+          className="px-2 py-1 text-sm bg-th-bg-card border border-th-border rounded hover:bg-th-bg-hover disabled:opacity-50 disabled:cursor-not-allowed text-th-text-primary"
         >
           Next &gt;
         </button>
@@ -159,7 +158,7 @@ export const Toolbar: React.FC = () => {
         className={`px-3 py-1.5 text-sm rounded ${
           isDirty && currentImage
             ? 'bg-green-500 text-white hover:bg-green-600'
-            : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+            : 'bg-th-bg-card border border-th-border text-th-text-secondary cursor-not-allowed'
         }`}
         title="Save (Ctrl+S)"
       >
@@ -189,7 +188,7 @@ export const Toolbar: React.FC = () => {
           className={`px-3 py-1.5 text-sm rounded flex items-center gap-1.5 ${
             canAutoAnnotate
               ? 'bg-indigo-600 text-white hover:bg-indigo-700'
-              : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+              : 'bg-th-bg-card border border-th-border text-th-text-secondary cursor-not-allowed'
           }`}
         >
           <span>✦</span> Auto-Annotate
@@ -219,23 +218,23 @@ export const Toolbar: React.FC = () => {
           <span className="text-xs">▾</span>
         </button>
         {exportOpen && (
-          <div className="absolute right-0 top-full mt-1 bg-white border border-gray-200 rounded shadow-xl z-50 w-56 overflow-hidden">
-            <div className="px-3 py-1.5 text-[10px] font-semibold text-gray-400 uppercase tracking-wide border-b border-gray-100">
+          <div className="absolute right-0 top-full mt-1 bg-th-bg-card border border-th-border rounded shadow-xl z-50 w-56 overflow-hidden">
+            <div className="px-3 py-1.5 text-[10px] font-semibold text-th-text-secondary uppercase tracking-wide border-b border-th-border">
               Choose format
             </div>
             <button
               onClick={handleExportJsonl}
-              className="w-full px-3 py-2 text-sm text-left hover:bg-gray-50 flex flex-col"
+              className="w-full px-3 py-2 text-sm text-left hover:bg-th-bg-hover flex flex-col"
             >
-              <span className="font-medium text-gray-800">Claude Fine-tuning JSONL</span>
-              <span className="text-[11px] text-gray-400">JSONL for Anthropic fine-tuning API</span>
+              <span className="font-medium text-th-text-primary">Claude Fine-tuning JSONL</span>
+              <span className="text-[11px] text-th-text-secondary">JSONL for Anthropic fine-tuning API</span>
             </button>
             <button
               onClick={handleExportHuggingFace}
-              className="w-full px-3 py-2 text-sm text-left hover:bg-gray-50 flex flex-col border-t border-gray-100"
+              className="w-full px-3 py-2 text-sm text-left hover:bg-th-bg-hover flex flex-col border-t border-th-border"
             >
-              <span className="font-medium text-gray-800">HuggingFace Dataset ZIP</span>
-              <span className="text-[11px] text-gray-400">Compatible with LayoutLM, Donut, etc.</span>
+              <span className="font-medium text-th-text-primary">HuggingFace Dataset ZIP</span>
+              <span className="text-[11px] text-th-text-secondary">Compatible with LayoutLM, Donut, etc.</span>
             </button>
           </div>
         )}

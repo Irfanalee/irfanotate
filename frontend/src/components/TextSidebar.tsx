@@ -55,7 +55,7 @@ export const TextSidebar: React.FC = () => {
   const annotatedCount = docs.filter((d) => d.is_annotated).length;
 
   const UploadButton = () => (
-    <div className="p-2 border-b border-gray-300">
+    <div className="p-2 border-b border-th-border">
       <input
         ref={fileInputRef}
         type="file"
@@ -82,17 +82,17 @@ export const TextSidebar: React.FC = () => {
         )}
       </button>
       {uploadMessage && (
-        <p className="mt-1 text-xs text-center text-gray-600">{uploadMessage}</p>
+        <p className="mt-1 text-xs text-center text-th-text-secondary">{uploadMessage}</p>
       )}
     </div>
   );
 
   if (isLoading) {
     return (
-      <div className="w-48 bg-gray-100 border-r border-gray-300 flex flex-col">
+      <div className="w-48 bg-th-bg-sidebar border-r border-th-border flex flex-col">
         <UploadButton />
         <div className="flex-1 flex items-center justify-center">
-          <div className="text-gray-500 text-sm">Loading...</div>
+          <div className="text-th-text-secondary text-sm">Loading...</div>
         </div>
       </div>
     );
@@ -100,10 +100,10 @@ export const TextSidebar: React.FC = () => {
 
   if (docs.length === 0) {
     return (
-      <div className="w-48 bg-gray-100 border-r border-gray-300 flex flex-col">
+      <div className="w-48 bg-th-bg-sidebar border-r border-th-border flex flex-col">
         <UploadButton />
         <div className="flex-1 flex items-center justify-center p-4">
-          <div className="text-gray-500 text-center text-sm">
+          <div className="text-th-text-secondary text-center text-sm">
             <p>No documents</p>
             <p className="mt-2 text-xs">Upload .txt or .jsonl files</p>
           </div>
@@ -113,10 +113,10 @@ export const TextSidebar: React.FC = () => {
   }
 
   return (
-    <div className="w-48 bg-gray-100 border-r border-gray-300 flex flex-col">
+    <div className="w-48 bg-th-bg-sidebar border-r border-th-border flex flex-col">
       <UploadButton />
-      <div className="p-2 border-b border-gray-300 bg-gray-200">
-        <h2 className="text-sm font-semibold text-gray-700">Documents ({docs.length})</h2>
+      <div className="p-2 border-b border-th-border bg-th-bg-footer">
+        <h2 className="text-sm font-semibold text-th-text-primary">Documents ({docs.length})</h2>
         <p className="text-xs text-green-700 mt-0.5">
           {annotatedCount} / {docs.length} annotated
         </p>
@@ -127,7 +127,7 @@ export const TextSidebar: React.FC = () => {
           return (
             <div
               key={doc.filename}
-              className={`p-2 cursor-pointer border-b border-gray-200 hover:bg-gray-200 ${
+              className={`p-2 cursor-pointer border-b border-th-border hover:bg-th-bg-hover ${
                 isSelected
                   ? doc.is_annotated
                     ? 'bg-green-100 border-l-4 border-l-green-500'
@@ -139,19 +139,19 @@ export const TextSidebar: React.FC = () => {
               onClick={() => setCurrentIndex(index)}
             >
               <div className="flex items-start justify-between gap-1">
-                <p className="text-xs text-gray-700 truncate flex-1 font-medium" title={doc.filename}>
+                <p className="text-xs text-th-text-primary truncate flex-1 font-medium" title={doc.filename}>
                   {doc.filename}
                 </p>
                 <button
                   onClick={(e) => handleRemoveDoc(e, doc.filename)}
                   title="Remove document"
-                  className="text-gray-400 hover:text-red-500 flex-shrink-0 text-xs leading-none"
+                  className="text-th-text-secondary hover:text-red-500 flex-shrink-0 text-xs leading-none"
                 >
                   ×
                 </button>
               </div>
               <div className="mt-1 flex items-center gap-1">
-                <p className="text-xs text-gray-400">
+                <p className="text-xs text-th-text-secondary">
                   {doc.char_count.toLocaleString()} chars
                 </p>
                 {doc.is_annotated && (

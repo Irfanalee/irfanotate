@@ -19,3 +19,132 @@ body {
   width: 100vw;
   overflow: hidden;
 }
+
+/* ── Theme variables ─────────────────────────────────────── */
+
+/* White (default) — :root sets the baseline for all themes */
+:root {
+  --th-bg-page:       #f9fafb;
+  --th-bg-header:     #1f2937;
+  --th-bg-sidebar:    #f3f4f6;
+  --th-bg-panel:      #ffffff;
+  --th-bg-toolbar:    #f3f4f6;
+  --th-bg-footer:     #e5e7eb;
+  --th-bg-card:       #ffffff;
+  --th-border:        #e5e7eb;
+  --th-border-strong: #d1d5db;
+  --th-text-primary:  #111827;
+  --th-text-secondary:#6b7280;
+  --th-text-header:   #f9fafb;
+  --th-bg-hover:      #f3f4f6;
+  --th-bg-selected:   #eff6ff;
+}
+
+/* html[data-theme="x"] has specificity (0,1,1) — always beats :root (0,1,0) */
+html[data-theme="grey"] {
+  --th-bg-page:       #e5e7eb;
+  --th-bg-header:     #374151;
+  --th-bg-sidebar:    #d1d5db;
+  --th-bg-panel:      #f3f4f6;
+  --th-bg-toolbar:    #d1d5db;
+  --th-bg-footer:     #c9cdd4;
+  --th-bg-card:       #f3f4f6;
+  --th-border:        #9ca3af;
+  --th-border-strong: #6b7280;
+  --th-text-primary:  #1f2937;
+  --th-text-secondary:#4b5563;
+  --th-text-header:   #f9fafb;
+  --th-bg-hover:      #c9cdd4;
+  --th-bg-selected:   #dbeafe;
+}
+
+html[data-theme="white"] {
+  --th-bg-page:       #f9fafb;
+  --th-bg-header:     #1f2937;
+  --th-bg-sidebar:    #f3f4f6;
+  --th-bg-panel:      #ffffff;
+  --th-bg-toolbar:    #f3f4f6;
+  --th-bg-footer:     #e5e7eb;
+  --th-bg-card:       #ffffff;
+  --th-border:        #e5e7eb;
+  --th-border-strong: #d1d5db;
+  --th-text-primary:  #111827;
+  --th-text-secondary:#6b7280;
+  --th-text-header:   #f9fafb;
+  --th-bg-hover:      #f3f4f6;
+  --th-bg-selected:   #eff6ff;
+}
+
+html[data-theme="blue"] {
+  --th-bg-page:       #eff6ff;
+  --th-bg-header:     #1e3a5f;
+  --th-bg-sidebar:    #dbeafe;
+  --th-bg-panel:      #ffffff;
+  --th-bg-toolbar:    #dbeafe;
+  --th-bg-footer:     #bfdbfe;
+  --th-bg-card:       #ffffff;
+  --th-border:        #bfdbfe;
+  --th-border-strong: #93c5fd;
+  --th-text-primary:  #1e3a8a;
+  --th-text-secondary:#3b82f6;
+  --th-text-header:   #eff6ff;
+  --th-bg-hover:      #dbeafe;
+  --th-bg-selected:   #bfdbfe;
+}
+
+html[data-theme="dark"] {
+  --th-bg-page:       #111827;
+  --th-bg-header:     #030712;
+  --th-bg-sidebar:    #1f2937;
+  --th-bg-panel:      #1f2937;
+  --th-bg-toolbar:    #1f2937;
+  --th-bg-footer:     #111827;
+  --th-bg-card:       #1f2937;
+  --th-border:        #374151;
+  --th-border-strong: #4b5563;
+  --th-text-primary:  #f9fafb;
+  --th-text-secondary:#9ca3af;
+  --th-text-header:   #f9fafb;
+  --th-bg-hover:      #374151;
+  --th-bg-selected:   #1e3a5f;
+}
+
+html[data-theme="midnight"] {
+  --th-bg-page:       #0d1117;
+  --th-bg-header:     #010409;
+  --th-bg-sidebar:    #161b22;
+  --th-bg-panel:      #161b22;
+  --th-bg-toolbar:    #161b22;
+  --th-bg-footer:     #0d1117;
+  --th-bg-card:       #161b22;
+  --th-border:        #30363d;
+  --th-border-strong: #484f58;
+  --th-text-primary:  #e6edf3;
+  --th-text-secondary:#8b949e;
+  --th-text-header:   #e6edf3;
+  --th-bg-hover:      #21262d;
+  --th-bg-selected:   #1f3244;
+}
+
+/* ── Theme utility classes (defined here, not via tailwind.config.js) ── */
+.bg-th-bg-page      { background-color: var(--th-bg-page) }
+.bg-th-bg-header    { background-color: var(--th-bg-header) }
+.bg-th-bg-sidebar   { background-color: var(--th-bg-sidebar) }
+.bg-th-bg-panel     { background-color: var(--th-bg-panel) }
+.bg-th-bg-toolbar   { background-color: var(--th-bg-toolbar) }
+.bg-th-bg-footer    { background-color: var(--th-bg-footer) }
+.bg-th-bg-card      { background-color: var(--th-bg-card) }
+.bg-th-bg-hover     { background-color: var(--th-bg-hover) }
+.bg-th-bg-selected  { background-color: var(--th-bg-selected) }
+
+.text-th-text-primary   { color: var(--th-text-primary) }
+.text-th-text-secondary { color: var(--th-text-secondary) }
+.text-th-text-header    { color: var(--th-text-header) }
+
+.border-th-border        { border-color: var(--th-border) }
+.border-th-border-strong { border-color: var(--th-border-strong) }
+
+.hover\:bg-th-bg-hover:hover { background-color: var(--th-bg-hover) }
+
+.hover\:text-th-text-primary:hover   { color: var(--th-text-primary) }
+.hover\:text-th-text-secondary:hover { color: var(--th-text-secondary) }

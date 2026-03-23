@@ -13,11 +13,11 @@ export const AnnotationPanel: React.FC = () => {
 
   if (annotations.length === 0) {
     return (
-      <div className="w-64 border-l border-gray-200 bg-white flex flex-col">
-        <div className="p-3 border-b border-gray-200">
-          <h2 className="text-sm font-semibold text-gray-700">Annotations</h2>
+      <div className="w-64 border-l border-th-border bg-th-bg-panel flex flex-col">
+        <div className="p-3 border-b border-th-border">
+          <h2 className="text-sm font-semibold text-th-text-primary">Annotations</h2>
         </div>
-        <div className="flex-1 flex items-center justify-center text-sm text-gray-400 p-4 text-center">
+        <div className="flex-1 flex items-center justify-center text-sm text-th-text-secondary p-4 text-center">
           No annotations yet. Draw a box or polygon to get started.
         </div>
       </div>
@@ -25,9 +25,9 @@ export const AnnotationPanel: React.FC = () => {
   }
 
   return (
-    <div className="w-64 border-l border-gray-200 bg-white flex flex-col">
-      <div className="p-3 border-b border-gray-200">
-        <h2 className="text-sm font-semibold text-gray-700">
+    <div className="w-64 border-l border-th-border bg-th-bg-panel flex flex-col">
+      <div className="p-3 border-b border-th-border">
+        <h2 className="text-sm font-semibold text-th-text-primary">
           Annotations ({annotations.length})
         </h2>
       </div>
@@ -43,8 +43,8 @@ export const AnnotationPanel: React.FC = () => {
           return (
             <div
               key={ann.id}
-              className={`flex items-center justify-between px-3 py-2 border-b border-gray-100 cursor-pointer hover:bg-gray-50 ${
-                isSelected ? 'bg-blue-50' : ''
+              className={`flex items-center justify-between px-3 py-2 border-b border-th-border cursor-pointer hover:bg-th-bg-hover ${
+                isSelected ? 'bg-th-bg-selected' : ''
               }`}
               onClick={() => selectAnnotation(ann.id)}
             >
@@ -54,10 +54,10 @@ export const AnnotationPanel: React.FC = () => {
                   style={{ backgroundColor: color }}
                 />
                 <div className="min-w-0">
-                  <div className="text-xs font-medium text-gray-800 truncate">
+                  <div className="text-xs font-medium text-th-text-primary truncate">
                     {ann.label.replace(/_/g, ' ')}
                   </div>
-                  <div className="text-xs text-gray-400">{geomLabel}</div>
+                  <div className="text-xs text-th-text-secondary">{geomLabel}</div>
                 </div>
               </div>
               <button
@@ -65,7 +65,7 @@ export const AnnotationPanel: React.FC = () => {
                   e.stopPropagation();
                   deleteAnnotation(ann.id);
                 }}
-                className="text-gray-400 hover:text-red-500 transition-colors flex-shrink-0 ml-1"
+                className="text-th-text-secondary hover:text-red-500 transition-colors flex-shrink-0 ml-1"
                 title="Delete annotation"
               >
                 ×
